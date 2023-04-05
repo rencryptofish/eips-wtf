@@ -169,3 +169,5 @@ dist/**/*
 
 # ignore yarn.lock
 yarn.lock
+
+/backend/eips-repo/
