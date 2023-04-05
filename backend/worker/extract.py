@@ -18,6 +18,8 @@ def checkout():
         logger.info(f"Deleting {LOCAL_REPO_PATH}...")
         os.system(f"rm -rf {LOCAL_REPO_PATH}")
 
+    os.makedirs(LOCAL_REPO_PATH, exist_ok=True)
+
     logger.info(f"Cloning {REPO_CLONE_URL} to {LOCAL_REPO_PATH}...")
     repo = git.Repo.clone_from(REPO_CLONE_URL, LOCAL_REPO_PATH)
 
