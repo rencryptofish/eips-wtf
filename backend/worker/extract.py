@@ -9,7 +9,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-REPO_CLONE_URL = "git@github.com:ethereum/EIPs.git"
+REPO_CLONE_URL = "https://github.com/ethereum/EIPs.git"
 LOCAL_REPO_PATH = os.path.join(BACKEND_PATH, "eips-repo")
 
 
