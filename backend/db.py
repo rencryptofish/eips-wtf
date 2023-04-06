@@ -1,30 +1,13 @@
 import logging
 import os
 
-from peewee import (
-    SQL,
-    BigIntegerField,
-    BooleanField,
-    CharField,
-    CompositeKey,
-    DateField,
-    DateTimeField,
-    DecimalField,
-    DoubleField,
-    FloatField,
-    ForeignKeyField,
-    IntegerField,
-    Model,
-    PrimaryKeyField,
-    TextField,
-)
+from peewee import (SQL, BigIntegerField, BooleanField, CharField,
+                    CompositeKey, DateField, DateTimeField, DecimalField,
+                    DoubleField, FloatField, ForeignKeyField, IntegerField,
+                    Model, PrimaryKeyField, TextField)
 from playhouse.pool import PooledPostgresqlExtDatabase
-from playhouse.postgres_ext import (
-    ArrayField,
-    BinaryJSONField,
-    DateTimeTZField,
-    JSONField,
-)
+from playhouse.postgres_ext import (ArrayField, BinaryJSONField,
+                                    DateTimeTZField, JSONField)
 
 logger = logging.getLogger(__name__)
 

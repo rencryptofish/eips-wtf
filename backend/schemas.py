@@ -1,25 +1,25 @@
-from datetime import datetime, date
+from datetime import date, datetime
+from typing import List, Optional
 
 from pydantic import BaseModel
-from typing import Optional, List
 
 
-class Author(BaseModel):
+class EIPContributor(BaseModel):
     email: str
     name: str
 
 
-class Commit(BaseModel):
+class EIPDiff(BaseModel):
+    eip: int
+
+
+class EIPCommit(BaseModel):
     hexsha: str
     committed_datetime: datetime
     authored_datetime: datetime
     message: str
-    author: Author
-
-
-class EIPDiff(BaseModel):
-    eip: int
-    author: Author
+    author: EIPContributor
+    eip_diffs: List[EIPDiff]
 
 
 class EIP(BaseModel):
@@ -31,4 +31,5 @@ class EIP(BaseModel):
     category: Optional[str]
     created: date
     requires: List[int]
+    last_call_deadline: Optional[date]
     content: str
