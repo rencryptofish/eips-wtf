@@ -1,6 +1,6 @@
 import logging
 import os
-from playhouse.pool import PooledPostgresqlExtDatabase
+
 from peewee import (
     SQL,
     BigIntegerField,
@@ -26,7 +26,6 @@ from playhouse.postgres_ext import (
     JSONField,
 )
 
-
 logger = logging.getLogger(__name__)
 
 database = PooledPostgresqlExtDatabase(None)
@@ -49,5 +48,14 @@ class BaseModel(Model):
         database = database
 
 
+class Author(BaseModel):
+    email = CharField(primary_key=True)
+    name = CharField()
+
+
 class Commit(BaseModel):
-    pass
+    hexsha = CharField(primary_key=True)
+    committed_datetime = DateTimeTZField()
+    authored_datetime = DateTimeTZField()
+    message = TextField()
+    author_email = ForeignKeyField(Author, backref="commits", field="email")

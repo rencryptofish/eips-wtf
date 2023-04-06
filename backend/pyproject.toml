@@ -8,9 +8,12 @@ license = "MIT"
 
 [tool.poetry.dependencies]
 python = "^3.10"
-gitpython = "^3.1.31"
+gitpython = "==3.1.30"
 psycopg2 = "^2.9.6"
 peewee = "^3.16.0"
+pydantic = "^1.10.7"
+pydriller = "==2.4.1"
+python-frontmatter = "^1.0.0"
 
 [tool.poetry.dev-dependencies]
 black = "^23.3.0"

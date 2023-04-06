@@ -1,8 +1,8 @@
+import logging
 import os
+
 from worker import BACKEND_PATH
 from worker.extract import checkout
-import logging
-
 
 logging.basicConfig(level=logging.INFO)
 
