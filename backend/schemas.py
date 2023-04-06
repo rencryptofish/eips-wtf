@@ -4,12 +4,8 @@ from typing import List, Optional
 from pydantic import BaseModel
 
 
-class EIPContributor(BaseModel):
-    email: str
-    name: str
-
-
 class EIPDiff(BaseModel):
+    hexsha: str
     eip: int
 
 
@@ -18,7 +14,8 @@ class EIPCommit(BaseModel):
     committed_datetime: datetime
     authored_datetime: datetime
     message: str
-    author: EIPContributor
+    author_email: str
+    author_name: str
     eip_diffs: List[EIPDiff]
 
 

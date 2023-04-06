@@ -5,14 +5,13 @@ Extract useful metadata from the EIPs repo
 import logging
 import os
 import re
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 from typing import List
 
 import frontmatter
 import git
 from pydriller import Commit, Repository
-
-from schemas import EIP, EIPCommit, EIPContributor, EIPDiff
+from schemas import EIP, EIPCommit, EIPDiff
 from worker import BACKEND_PATH
 
 logger = logging.getLogger(__name__)
@@ -104,6 +103,7 @@ def _parse_commit_for_eip_diffs(commit: Commit) -> List[EIPDiff]:
             eip_diffs.append(
                 EIPDiff(
                     eip=int(m.filename.split("-")[1].split(".")[0]),
+                    hexsha=commit.hash,
                 )
             )
 
@@ -126,10 +126,8 @@ def get_commits(repo_path: str = LOCAL_REPO_PATH) -> List[EIPCommit]:
             committed_datetime=commit.committer_date.astimezone(timezone.utc),
             authored_datetime=commit.author_date.astimezone(timezone.utc),
             message=commit.msg,
-            author=EIPContributor(
-                email=commit.author.email,
-                name=commit.author.name,
-            ),
+            author_email=commit.author.email,
+            author_name=commit.author.name,
             eip_diffs=eip_diffs,
         )
         commits.append(eip_commit)
@@ -137,9 +135,103 @@ def get_commits(repo_path: str = LOCAL_REPO_PATH) -> List[EIPCommit]:
     return commits
 
 
-def process_extraction():
+def _insert_eips(db_conn, eips: List[EIP]) -> None:
+    logger.info("Inserting EIPs...")
+    with db_conn.cursor() as cursor:
+        for eip in eips:
+            cursor.execute(
+                """
+                INSERT INTO eips (
+                    eip,
+                    title,
+                    author,
+                    status,
+                    type,
+                    category,
+                    created,
+                    requires,
+                    last_call_deadline,
+                    content
+                ) VALUES (
+                    %(eip)s,
+                    %(title)s,
+                    %(author)s,
+                    %(status)s,
+                    %(type)s,
+                    %(category)s,
+                    %(created)s,
+                    %(requires)s,
+                    %(last_call_deadline)s,
+                    %(content)s
+                )
+                ON CONFLICT (eip) DO UPDATE SET
+                    title = %(title)s,
+                    author = %(author)s,
+                    status = %(status)s,
+                    type = %(type)s,
+                    category = %(category)s,
+                    created = %(created)s,
+                    requires = %(requires)s,
+                    last_call_deadline = %(last_call_deadline)s,
+                    content = %(content)s
+                """,
+                eip.dict(),
+            )
+        db_conn.commit()
+
+
+def _insert_commits(db_conn, commits: List[EIPCommit]) -> None:
+    logger.info("Inserting commits...")
+    with db_conn.cursor() as cursor:
+        for commit in commits:
+            cursor.execute(
+                """
+                INSERT INTO commits (
+                    hexsha,
+                    committed_datetime,
+                    authored_datetime,
+                    message,
+                    author_email,
+                    author_name
+                ) VALUES (
+                    %(hexsha)s,
+                    %(committed_datetime)s,
+                    %(authored_datetime)s,
+                    %(message)s,
+                    %(author_email)s,
+                    %(author_name)s
+                )
+                ON CONFLICT (hexsha) DO UPDATE SET
+                    committed_datetime = %(committed_datetime)s,
+                    authored_datetime = %(authored_datetime)s,
+                    message = %(message)s,
+                    author_email = %(author_email)s,
+                    author_name = %(author_name)s
+                """,
+                commit.dict(),
+            )
+            for eip_diff in commit.eip_diffs:
+                cursor.execute(
+                    """
+                    INSERT INTO eip_diffs (
+                        hexsha,
+                        eip
+                    ) VALUES (
+                        %(hexsha)s,
+                        %(eip)s
+                    )
+                    ON CONFLICT (hexsha, eip) DO NOTHING
+                    """,
+                    eip_diff.dict(),
+                )
+        db_conn.commit()
+
+
+def process_extraction(db_conn):
     logger.info("Extracting EIPs...")
     checkout_repo()
     eips = extract_eips()
     commits = get_commits()
+    _insert_eips(db_conn, eips)
+    _insert_commits(db_conn, commits)
     delete_repo()
