@@ -23,4 +23,5 @@ def checkout():
     logger.info(f"Cloning {REPO_CLONE_URL} to {LOCAL_REPO_PATH}...")
     repo = git.Repo.clone_from(REPO_CLONE_URL, LOCAL_REPO_PATH)
 
+
 checkout()
