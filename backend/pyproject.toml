@@ -15,14 +15,14 @@ pydantic = "^1.10.7"
 pydriller = "==2.4.1"
 python-frontmatter = "^1.0.0"
 fastapi = "^0.95.0"
-uvicorn = "^0.21.1"
-python-dotenv = "^1.0.0"
 fastapi-cache2 = "^0.2.1"
+uvicorn = "^0.21.1"
 
 [tool.poetry.dev-dependencies]
 black = "^23.3.0"
 isort = "^5.12.0"
 ipykernel = "^6.22.0"
+poetry-dotenv-plugin = "^0.1.0"
 
 [tool.poetry.scripts]
 extract-metadata = "scripts.extract_metadata:main"

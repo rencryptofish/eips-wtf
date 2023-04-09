@@ -1,7 +1,6 @@
 import logging
 import os
 
-from dotenv import load_dotenv
 from peewee import (
     SQL,
     BigIntegerField,
@@ -27,7 +26,6 @@ from playhouse.postgres_ext import (
     JSONField,
 )
 
-load_dotenv()
 logger = logging.getLogger(__name__)
 
 database = PooledPostgresqlExtDatabase(None)
