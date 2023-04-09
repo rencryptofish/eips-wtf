@@ -49,10 +49,17 @@ async def get_eip(eip_id: int, _=Depends(open_close_db)):
     return {"message": "EIP not found"}
 
 
-@app.get("/items")
+@app.get("/categories")
 @cache(expire=CACHE_EXPIRE_SECONDS)
-async def get_items(_=Depends(open_close_db)):
-    items = list(EIP.select().dicts())
+async def get_categories(_=Depends(open_close_db)):
+    categories = list(EIP.select(EIP.category).distinct().dicts())
+    return categories
+
+
+@app.get("/category/{category}")
+@cache(expire=CACHE_EXPIRE_SECONDS)
+async def get_category(category: str, _=Depends(open_close_db)):
+    items = list(EIP.select().where(EIP.category == category).dicts())
     return items
 
 
@@ -60,6 +67,7 @@ def run():
     import uvicorn
 
     uvicorn.run("server:app", host="0.0.0.0", port=8000, reload=True)
+
 
 if __name__ == "__main__":
     run()

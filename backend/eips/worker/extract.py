@@ -6,7 +6,7 @@ import logging
 import os
 import re
 from datetime import datetime, timezone
-from typing import List
+from typing import List, Optional
 
 import frontmatter
 import git
@@ -50,6 +50,18 @@ def _get_modified_files(commit) -> List[str]:
     return modified_files
 
 
+def _get_category(metadata: dict) -> Optional[str]:
+    if metadata.get("type") == "Meta":
+        # Meta EIPs don't have a category
+        return "Meta"
+
+    if metadata.get("type") == "Informational":
+        # Informational EIPs don't have a category
+        return "Informational"
+
+    return metadata.get("category")
+
+
 def _extract_eip(eip_path: str) -> EIP:
     # Extracting EIPs from markdown files
     with open(eip_path, "r") as file:
@@ -70,7 +82,7 @@ def _extract_eip(eip_path: str) -> EIP:
         author=metadata["author"],
         status=metadata["status"],
         type=metadata["type"],
-        category=metadata.get("category"),
+        category=_get_category(metadata),
         created=metadata["created"],
         requires=requires,
         last_call_deadline=metadata.get("last-call-deadline"),
