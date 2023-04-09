@@ -1,5 +1,5 @@
-from fastapi import FastAPI, Depends
-from db import get_db_conn, EIP
+from db import EIP, get_db_conn
+from fastapi import Depends, FastAPI
 from fastapi_cache import FastAPICache
 from fastapi_cache.backends.inmemory import InMemoryBackend
 from fastapi_cache.decorator import cache
