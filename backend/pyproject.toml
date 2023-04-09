@@ -26,6 +26,8 @@ ipykernel = "^6.22.0"
 
 [tool.poetry.scripts]
 extract-metadata = "scripts.extract_metadata:main"
+server = "server:run"
+
 
 [build-system]
 requires = ["poetry-core"]

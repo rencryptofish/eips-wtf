@@ -1,4 +1,4 @@
-from db import EIP, get_db_conn
+from eips.db import EIP, get_db_conn
 from fastapi import Depends, FastAPI
 from fastapi_cache import FastAPICache
 from fastapi_cache.backends.inmemory import InMemoryBackend
@@ -29,6 +29,11 @@ async def on_startup():
     setup_cache()
 
 
+@app.get("/")
+async def root():
+    return {"message": "Hello World"}
+
+
 @app.get("/hello")
 @cache(expire=CACHE_EXPIRE_SECONDS)
 async def hello():
@@ -51,7 +56,7 @@ async def get_items(_=Depends(open_close_db)):
     return items
 
 
-if __name__ == "__main__":
+def run():
     import uvicorn
 
-    uvicorn.run(app, host="127.0.0.1", port=8000)
+    uvicorn.run("server:app", host="127.0.0.1", port=8000, reload=True)
