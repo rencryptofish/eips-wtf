@@ -10,10 +10,9 @@ from typing import List, Optional
 
 import frontmatter
 import git
-from pydriller import Commit, Repository
-
 from eips.schemas import EIP, EIPCommit, EIPDiff
 from eips.worker import BACKEND_PATH
+from pydriller import Commit, Repository
 
 logger = logging.getLogger(__name__)
 

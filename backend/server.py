@@ -3,6 +3,7 @@ from fastapi import Depends, FastAPI
 from fastapi_cache import FastAPICache
 from fastapi_cache.backends.inmemory import InMemoryBackend
 from fastapi_cache.decorator import cache
+from peewee import fn
 
 CACHE_EXPIRE_SECONDS = 60 * 60  # 1 hour
 
@@ -59,7 +60,7 @@ async def get_categories(_=Depends(open_close_db)):
 @app.get("/category/{category}")
 @cache(expire=CACHE_EXPIRE_SECONDS)
 async def get_category(category: str, _=Depends(open_close_db)):
-    items = list(EIP.select().where(EIP.category == category).dicts())
+    items = list(EIP.select().where(fn.Lower(EIP.category) == category.lower()).dicts())
     return items
 
 
