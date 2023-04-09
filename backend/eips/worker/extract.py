@@ -12,8 +12,8 @@ import frontmatter
 import git
 from pydriller import Commit, Repository
 
-from schemas import EIP, EIPCommit, EIPDiff
-from worker import BACKEND_PATH
+from eips.schemas import EIP, EIPCommit, EIPDiff
+from eips.worker import BACKEND_PATH
 
 logger = logging.getLogger(__name__)
 

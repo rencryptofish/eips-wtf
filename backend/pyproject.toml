@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "backend"
+name = "eips"
 version = "0.1.0"
 description = ""
 authors = ["ren <84360463+rencryptofish@users.noreply.github.com>"]

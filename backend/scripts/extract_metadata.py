@@ -1,7 +1,7 @@
 import logging
 
-from db import get_db_conn
-from worker.extract import process_extraction
+from eips.db import get_db_conn
+from eips.worker.extract import process_extraction
 
 logging.basicConfig(level=logging.INFO)
 
