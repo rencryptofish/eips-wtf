@@ -1,6 +1,7 @@
 import logging
 import os
 
+from dotenv import load_dotenv
 from peewee import (
     SQL,
     BigIntegerField,
@@ -26,6 +27,7 @@ from playhouse.postgres_ext import (
     JSONField,
 )
 
+load_dotenv()
 logger = logging.getLogger(__name__)
 
 database = PooledPostgresqlExtDatabase(None)
@@ -60,7 +62,7 @@ class Commit(BaseModel):
         table_name = "commits"
 
 
-class EIP(Model):
+class EIP(BaseModel):
     eip = IntegerField(primary_key=True)
     title = CharField(max_length=255)
     author = TextField()
@@ -68,7 +70,7 @@ class EIP(Model):
     type = CharField(max_length=255, column_name="type")
     category = CharField(max_length=255, null=True)
     created = DateField()
-    requires = ArrayField(IntegerField, null=True, field_name="requires")
+    requires = ArrayField(IntegerField, null=True)
     last_call_deadline = DateField(null=True)
     content = TextField(column_name="content")
 
@@ -76,7 +78,7 @@ class EIP(Model):
         table_name = "eips"
 
 
-class EIPDiff(Model):
+class EIPDiff(BaseModel):
     hexsha = CharField(max_length=40)
     eip = IntegerField()
 
