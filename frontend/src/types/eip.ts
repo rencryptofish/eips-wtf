@@ -8,5 +8,4 @@ export interface EIP {
     created: string;
     requires: number[] | null;
     last_call_deadline: string | null;
-    content: string;
 }
