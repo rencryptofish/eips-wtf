@@ -111,6 +111,13 @@ async def get_eip_diffs(_=Depends(open_close_db)):
     return {"message": "success", "data": items}
 
 
+@app.get("/eip-by-status/{status}")
+@cache(expire=CACHE_EXPIRE_SECONDS)
+async def get_eip_by_status(status: str, _=Depends(open_close_db)):
+    items = list(EIP.select().where(fn.Lower(EIP.status) == status.lower()).dicts())
+    return {"message": "success", "data": items}
+
+
 def run():
     import uvicorn
 
