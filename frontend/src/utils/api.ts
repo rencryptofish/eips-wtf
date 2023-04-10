@@ -1,7 +1,7 @@
 import Axios from "axios";
 
 import { EIP } from ".././types/eip";
-import { EIPDiffsWithCommits } from ".././types/eip_diff"
+import { EIPDiffsWithCommits, EIPDiffsPerMonth } from ".././types/eip_diff"
 
 const api = Axios.create({
     withCredentials: false,
@@ -37,3 +37,24 @@ export const getLatestEIPDiffsWithCommits = async (): Promise<Array<EIPDiffsWith
     const eipDiffs: Array<EIPDiffsWithCommits> = res.data.data;
     return eipDiffs;
 };
+
+export const getEIPDiffsPerMonth = async (): Promise<Array<EIPDiffsPerMonth>> => {
+    const res = await api.get(`/eip-diffs-per-month`);
+    if (res.status !== 200) {
+        return Promise.reject(res.data);
+    }
+
+    const eipDiffs: Array<EIPDiffsPerMonth> = res.data.data;
+    return eipDiffs;
+}
+
+
+export const getEIPByStatus = async (status: string): Promise<Array<EIP>> => {
+    const res = await api.get(`/eip-by-status/${status}`);
+    if (res.status !== 200) {
+        return Promise.reject(res.data);
+    }
+
+    const eips: Array<EIP> = res.data.data;
+    return eips;
+}
