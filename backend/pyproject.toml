@@ -18,6 +18,7 @@ fastapi = "^0.95.0"
 fastapi-cache2 = "^0.2.1"
 uvicorn = "^0.21.1"
 python-dotenv = "^1.0.0"
+pandas = "^2.0.0"
 
 [tool.poetry.dev-dependencies]
 black = "^23.3.0"

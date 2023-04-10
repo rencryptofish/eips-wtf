@@ -3,6 +3,7 @@ from fastapi_cache import FastAPICache
 from fastapi_cache.backends.inmemory import InMemoryBackend
 from fastapi_cache.decorator import cache
 from peewee import JOIN, fn
+import pandas as pd
 
 from eips.db import (
     EIP,
@@ -97,6 +98,16 @@ async def get_category_eip_diffs(category: str, _=Depends(open_close_db)):
 async def get_eip_diffs(_=Depends(open_close_db)):
     query = EIPDiffsPerMonthView.select()
     items = list(query.dicts())
+
+    # Convert to a dataframe and pivot
+    df = (
+        pd.DataFrame(items)
+        .pivot(index="month", columns="category", values="count")
+        .fillna(0)
+        .astype(int)
+    )
+    items = df.reset_index().to_dict(orient="records")
+
     return {"message": "success", "data": items}
 
 
