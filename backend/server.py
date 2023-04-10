@@ -1,4 +1,4 @@
-from eips.db import EIP, get_db_conn
+from eips.db import EIP, get_db_conn, Commit
 from fastapi import Depends, FastAPI
 from fastapi_cache import FastAPICache
 from fastapi_cache.backends.inmemory import InMemoryBackend
@@ -61,6 +61,15 @@ async def get_categories(_=Depends(open_close_db)):
 @cache(expire=CACHE_EXPIRE_SECONDS)
 async def get_category(category: str, _=Depends(open_close_db)):
     items = list(EIP.select().where(fn.Lower(EIP.category) == category.lower()).dicts())
+    return items
+
+
+@app.get("/latest-commits")
+@cache(expire=CACHE_EXPIRE_SECONDS)
+async def get_latest_commits(_=Depends(open_close_db)):
+    items = list(
+        Commit.select().order_by(Commit.committed_datetime.desc()).limit(50).dicts()
+    )
     return items
 
 
