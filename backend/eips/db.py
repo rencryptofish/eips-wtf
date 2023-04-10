@@ -1,6 +1,7 @@
 import logging
 import os
 
+from dotenv import load_dotenv
 from peewee import (
     SQL,
     BigIntegerField,
@@ -26,6 +27,7 @@ from playhouse.postgres_ext import (
     JSONField,
 )
 
+load_dotenv()
 logger = logging.getLogger(__name__)
 
 database = PooledPostgresqlExtDatabase(None)
@@ -93,6 +95,8 @@ class EIPDiffsWithCommitsView(BaseModel):
     message = TextField()
     author_email = TextField()
     author_name = TextField()
+    type = CharField(max_length=255)
+    category = CharField(max_length=255, null=True)
 
     class Meta:
         table_name = "eip_diffs_with_commits_view"

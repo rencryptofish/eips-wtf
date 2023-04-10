@@ -44,14 +44,14 @@ const LatestEIPTable = ({ eipDiffs }: Props) => {
             {eipDiffs.map((eipDiff) => (
               <tr key={eipDiff.hexsha}>
                 <td className="border px-4 py-2">
-                  <Link href={`https://eips.ethereum.org/EIPS/eip-${eipDiff.eip}`}>
+                  <Link href={`https://eips.ethereum.org/EIPS/eip-${eipDiff.eip}`} target="_blank">
                     <span className="text-blue-600 hover:text-blue-800">{eipDiff.eip}</span>
                   </Link>
 
                 </td>
 
                 <td className="border px-4 py-2">
-                  <Link href={getGithubCommitUrl(eipDiff.hexsha)} passHref>
+                  <Link href={getGithubCommitUrl(eipDiff.hexsha)} passHref target="_blank">
                     <span
                       className="text-blue-600 hover:text-blue-800"
                     >
@@ -88,7 +88,7 @@ export const getStaticProps: GetStaticProps<Props> = async () => {
   const eipDiffs = await getLatestEIPDiffsWithCommits()
   return {
     props: { eipDiffs },
-    revalidate: 60 // Revalidate every 60 seconds
+    revalidate: 60 
   }
 }
 
