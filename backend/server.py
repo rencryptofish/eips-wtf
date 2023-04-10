@@ -1,9 +1,10 @@
-from eips.db import EIP, get_db_conn, Commit
 from fastapi import Depends, FastAPI
 from fastapi_cache import FastAPICache
 from fastapi_cache.backends.inmemory import InMemoryBackend
 from fastapi_cache.decorator import cache
-from peewee import fn
+from peewee import JOIN, fn
+
+from eips.db import EIP, Commit, EIPDiff, EIPDiffsWithCommitsView, get_db_conn
 
 CACHE_EXPIRE_SECONDS = 60 * 60  # 1 hour
 
@@ -31,14 +32,9 @@ async def on_startup():
 
 
 @app.get("/")
-async def root():
-    return {"message": "Hello World"}
-
-
-@app.get("/hello")
 @cache(expire=CACHE_EXPIRE_SECONDS)
-async def hello():
-    return {"message": "Hello World"}
+async def root():
+    return {"message": "gm"}
 
 
 @app.get("/eip/{eip_id}")
@@ -46,7 +42,7 @@ async def hello():
 async def get_eip(eip_id: int, _=Depends(open_close_db)):
     eip = EIP.get_or_none(EIP.eip == eip_id)
     if eip:
-        return eip
+        return {"message": "success", "data": eip.__data__}
     return {"message": "EIP not found"}
 
 
@@ -54,23 +50,26 @@ async def get_eip(eip_id: int, _=Depends(open_close_db)):
 @cache(expire=CACHE_EXPIRE_SECONDS)
 async def get_categories(_=Depends(open_close_db)):
     categories = list(EIP.select(EIP.category).distinct().dicts())
-    return categories
+    return {"message": "success", "data": categories}
 
 
 @app.get("/category/{category}")
 @cache(expire=CACHE_EXPIRE_SECONDS)
 async def get_category(category: str, _=Depends(open_close_db)):
     items = list(EIP.select().where(fn.Lower(EIP.category) == category.lower()).dicts())
-    return items
+    return {"message": "success", "data": items}
 
 
-@app.get("/latest-commits")
+@app.get("/latest-eip-diffs")
 @cache(expire=CACHE_EXPIRE_SECONDS)
 async def get_latest_commits(_=Depends(open_close_db)):
-    items = list(
-        Commit.select().order_by(Commit.committed_datetime.desc()).limit(50).dicts()
+    query = (
+        EIPDiffsWithCommitsView.select()
+        .order_by(EIPDiffsWithCommitsView.committed_datetime.desc())
+        .limit(50)
     )
-    return items
+    items = list(query.dicts())
+    return {"message": "success", "data": items}
 
 
 def run():

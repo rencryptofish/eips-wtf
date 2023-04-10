@@ -48,18 +48,6 @@ class BaseModel(Model):
         database = database
 
 
-class Commit(BaseModel):
-    hexsha = CharField(max_length=40, primary_key=True)
-    committed_datetime = DateTimeField(null=True)
-    authored_datetime = DateTimeField(null=True)
-    message = TextField(null=True)
-    author_email = TextField(null=True)
-    author_name = TextField(null=True)
-
-    class Meta:
-        table_name = "commits"
-
-
 class EIP(BaseModel):
     eip = IntegerField(primary_key=True)
     title = CharField(max_length=255)
@@ -76,6 +64,18 @@ class EIP(BaseModel):
         table_name = "eips"
 
 
+class Commit(BaseModel):
+    hexsha = CharField(max_length=40, primary_key=True)
+    committed_datetime = DateTimeField(null=True)
+    authored_datetime = DateTimeField(null=True)
+    message = TextField(null=True)
+    author_email = TextField(null=True)
+    author_name = TextField(null=True)
+
+    class Meta:
+        table_name = "commits"
+
+
 class EIPDiff(BaseModel):
     hexsha = CharField(max_length=40)
     eip = IntegerField()
@@ -83,3 +83,17 @@ class EIPDiff(BaseModel):
     class Meta:
         table_name = "eip_diffs"
         primary_key = CompositeKey("hexsha", "eip")
+
+
+class EIPDiffsWithCommitsView(BaseModel):
+    hexsha = CharField()
+    eip = IntegerField()
+    committed_datetime = DateTimeField()
+    authored_datetime = DateTimeField()
+    message = TextField()
+    author_email = TextField()
+    author_name = TextField()
+
+    class Meta:
+        table_name = "eip_diffs_with_commits_view"
+        primary_key = False
