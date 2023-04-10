@@ -27,5 +27,3 @@ export const getEIP = async (eipId: number): Promise<EIP> => {
 
     return eip;
 };
-
-export const getLatestCommits 
