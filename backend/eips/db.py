@@ -101,3 +101,13 @@ class EIPDiffsWithCommitsView(BaseModel):
     class Meta:
         table_name = "eip_diffs_with_commits_view"
         primary_key = False
+
+
+class EIPDiffsPerMonthView(BaseModel):
+    category = CharField(max_length=255, null=True)
+    month = DateField()
+    count = IntegerField()
+
+    class Meta:
+        table_name = "eip_diffs_per_month_view"
+        primary_key = False
