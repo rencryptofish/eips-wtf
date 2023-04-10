@@ -90,6 +90,7 @@ class EIPDiff(BaseModel):
 class EIPDiffsWithCommitsView(BaseModel):
     hexsha = CharField()
     eip = IntegerField()
+    title = CharField(max_length=255)
     committed_datetime = DateTimeField()
     authored_datetime = DateTimeField()
     message = TextField()
