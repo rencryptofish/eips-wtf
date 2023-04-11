@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { GetStaticProps } from 'next';
-import {CategoryPage } from '@/components/CategoryViz';
+import { CategoryPage } from '@/components/CategoryViz';
 import { EIPDiffsWithCommits, EIPDiffsPerMonth } from '@/types/eip_diff';
 import { EIP } from '@/types/eip';
 import {
@@ -18,7 +18,7 @@ type HomePageProps = {
 };
 
 const HomePage: React.FC<HomePageProps> = (props) => {
-  return <CategoryPage category="all" {...props} />;
+  return <CategoryPage category='all' {...props} />;
 };
 
 export const getStaticProps: GetStaticProps<HomePageProps> = async () => {
@@ -32,7 +32,7 @@ export const getStaticProps: GetStaticProps<HomePageProps> = async () => {
       eipDiffsPerMonth,
       lastCallEIPs,
     },
-    revalidate: 60, // Revalidate every minute (optional)
+    revalidate: 900, // Revalidate every minute (optional)
   };
 };
 
