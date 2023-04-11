@@ -119,6 +119,8 @@ async def get_eip_by_status(status: str, _=Depends(open_close_db)):
             EIP.eip,
             EIP.title,
             EIP.status,
+            EIP.category,
+            EIP.author,
             EIP.type,
             EIP.created,
             EIP.requires,
