@@ -133,6 +133,29 @@ async def get_eip_by_status(status: str, _=Depends(open_close_db)):
     return {"message": "success", "data": items}
 
 
+@app.get("/eip-diffs-per-month-category/{category}")
+@cache(expire=CACHE_EXPIRE_SECONDS)
+async def get_eip_diffs(category: str, _=Depends(open_close_db)):
+    if category.lower() == "all":
+        query = EIPDiffsPerMonthView.select()
+    else:
+        query = EIPDiffsPerMonthView.select().where(
+            fn.Lower(EIPDiffsPerMonthView.category) == category.lower()
+        )
+    items = list(query.dicts())
+
+    # Convert to a dataframe and pivot (only get complete months)
+    df = (
+        pd.DataFrame(items)
+        .pivot(index="month", columns="category", values="count")
+        .fillna(0)
+        .astype(int)
+    )[:-1]
+    items = df.reset_index().to_dict(orient="records")
+
+    return {"message": "success", "data": items}
+
+
 @app.get("/eip-by-category-status/{category}/{status}")
 @cache(expire=CACHE_EXPIRE_SECONDS)
 async def get_eip_by_category_status(
