@@ -38,7 +38,19 @@ export const getEIPByCategoryByStatus = async (
     return Promise.reject(res.data);
   }
 
-  const eips: Array<EIP> = res.data.data;
+  var eips: Array<EIP> = res.data.data;
+
+  // if status is last call, we need to sort by last call date
+  if (status === 'Last Call') {
+    eips.sort((a, b) => {
+      if (a.last_call_deadline && b.last_call_deadline) {
+        return new Date(b.last_call_deadline).getTime() - new Date(a.last_call_deadline).getTime();
+      } else {
+        return 0;
+      }
+    });    
+  }
+
   return eips;
 };
 

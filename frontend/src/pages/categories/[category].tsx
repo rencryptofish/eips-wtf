@@ -20,6 +20,15 @@ export const getStaticProps: GetStaticProps<CategoryProps> = async (context) => 
   const eipDiffsPerMonth = await getEIPDiffsPerMonthByCategory(category as string);
   const lastCallEIPs = await getEIPByCategoryByStatus(category as string, 'Last Call');
 
+  // sort last call EIPs by last call date
+  lastCallEIPs.sort((a, b) => {
+    if (a.last_call_deadline && b.last_call_deadline) {
+      return new Date(b.last_call_deadline).getTime() - new Date(a.last_call_deadline).getTime();
+    } else {
+      return 0;
+    }
+  });
+
   return {
     props: {
       category: category as string,

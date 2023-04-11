@@ -1,12 +1,12 @@
 export const EIP_CATEGORIES = [
-  'Meta',
-  'Unknown',
+  'All',
   'Core',
   'Networking',
-  'ERC',
-  'Informational',
   'Interface',
-  'All',
+  'ERC',
+  'Meta',
+  'Informational',
+  'Unknown',
 ];
 
 export type CategoryColors = {
