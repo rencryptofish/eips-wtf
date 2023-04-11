@@ -45,41 +45,6 @@ async def root():
     return {"message": "gm"}
 
 
-@app.get("/eip/{eip_id}")
-@cache(expire=CACHE_EXPIRE_SECONDS)
-async def get_eip(eip_id: int, _=Depends(open_close_db)):
-    eip = EIP.get_or_none(EIP.eip == eip_id)
-    if eip:
-        return {"message": "success", "data": eip.__data__}
-    return {"message": "EIP not found"}
-
-
-@app.get("/categories")
-@cache(expire=CACHE_EXPIRE_SECONDS)
-async def get_categories(_=Depends(open_close_db)):
-    categories = list(EIP.select(EIP.category).distinct().dicts())
-    return {"message": "success", "data": categories}
-
-
-@app.get("/category/{category}")
-@cache(expire=CACHE_EXPIRE_SECONDS)
-async def get_category(category: str, _=Depends(open_close_db)):
-    items = list(EIP.select().where(fn.Lower(EIP.category) == category.lower()).dicts())
-    return {"message": "success", "data": items}
-
-
-@app.get("/latest-eip-diffs")
-@cache(expire=CACHE_EXPIRE_SECONDS)
-async def get_latest_commits(_=Depends(open_close_db)):
-    query = (
-        EIPDiffsWithCommitsView.select()
-        .order_by(EIPDiffsWithCommitsView.committed_datetime.desc())
-        .limit(50)
-    )
-    items = list(query.dicts())
-    return {"message": "success", "data": items}
-
-
 @app.get("/category-eip-diffs/{category}")
 @cache(expire=CACHE_EXPIRE_SECONDS)
 async def get_category_eip_diffs(category: str, _=Depends(open_close_db)):
@@ -90,24 +55,6 @@ async def get_category_eip_diffs(category: str, _=Depends(open_close_db)):
         .order_by(EIPDiffsWithCommitsView.committed_datetime.desc())
     )
     items = list(query.dicts())
-    return {"message": "success", "data": items}
-
-
-@app.get("/eip-diffs-per-month")
-@cache(expire=CACHE_EXPIRE_SECONDS)
-async def get_eip_diffs(_=Depends(open_close_db)):
-    query = EIPDiffsPerMonthView.select()
-    items = list(query.dicts())
-
-    # Convert to a dataframe and pivot (only get complete months)
-    df = (
-        pd.DataFrame(items)
-        .pivot(index="month", columns="category", values="count")
-        .fillna(0)
-        .astype(int)
-    )[:-1]
-    items = df.reset_index().to_dict(orient="records")
-
     return {"message": "success", "data": items}
 
 
