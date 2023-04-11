@@ -58,3 +58,32 @@ export const getEIPByStatus = async (status: string): Promise<Array<EIP>> => {
     const eips: Array<EIP> = res.data.data;
     return eips;
 }
+
+export const getLatestEIPDiffsWithCommitsByCategory = async (category: string): Promise<Array<EIPDiffsWithCommits>> => {
+    const res = await api.get(`/latest-eip-diffs-by-category/${category}`);
+    if (res.status !== 200) {
+        return Promise.reject(res.data);
+    }
+
+    const eipDiffs: Array<EIPDiffsWithCommits> = res.data.data;
+    return eipDiffs;
+}
+
+export const getEIPByCategoryByStatus = async (category: string, status: string): Promise<Array<EIP>> => {
+    const res = await api.get(`/eip-by-category-status/${category}/${status}`);
+    if (res.status !== 200) {
+        return Promise.reject(res.data);
+    }
+
+    const eips: Array<EIP> = res.data.data;
+    return eips;
+}
+export const getEIPDiffsPerMonthByCategory = async (category: string): Promise<Array<EIPDiffsPerMonth>> => {
+    const res = await api.get(`/eip-diffs-per-month-category/${category}`);
+    if (res.status !== 200) {
+        return Promise.reject(res.data);
+    }
+
+    const eipDiffs: Array<EIPDiffsPerMonth> = res.data.data;
+    return eipDiffs;
+}

@@ -1,20 +1,47 @@
-import { GetServerSideProps, GetServerSidePropsContext } from 'next';
+import {CategoryPage, CategoryProps } from '../../components/CategoryViz';
+import { GetStaticPaths, GetStaticProps } from 'next';
+import {
+    getLatestEIPDiffsWithCommitsByCategory,
+    getEIPByCategoryByStatus,
+    getEIPDiffsPerMonthByCategory,
+} from '@/utils/api';
+import { EIP_CATEGORIES } from '@/utils/constants';
 
-type CategoryProps = {
-    category: string;
-};
 
-const CategoryPage = ({ category }: CategoryProps) => {
-    return <h1>{category}</h1>;
-};
 
-export const getServerSideProps: GetServerSideProps<CategoryProps> = async (context: GetServerSidePropsContext) => {
-    const { category } = context.query;
+export const getStaticProps: GetStaticProps<CategoryProps> = async (context) => {
+    if (!context.params) {
+        return {
+            notFound: true,
+        };
+    }
+
+    const { category } = context.params;
+
+    const eipDiffs = await getLatestEIPDiffsWithCommitsByCategory(category as string);
+    const eipDiffsPerMonth = await getEIPDiffsPerMonthByCategory(category as string);
+    const lastCallEIPs = await getEIPByCategoryByStatus(category as string, 'Last Call');
 
     return {
         props: {
             category: category as string,
+            eipDiffs,
+            eipDiffsPerMonth,
+            lastCallEIPs,
         },
+        revalidate: 60, // Revalidate every minute (optional)
+    };
+};
+
+export const getStaticPaths: GetStaticPaths = async () => {
+    const paths = EIP_CATEGORIES.map((category) => ({
+        params: { category: category.toLowerCase() },
+    }));
+
+
+    return {
+        paths,
+        fallback: false,
     };
 };
 
