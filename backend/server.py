@@ -133,6 +133,63 @@ async def get_eip_by_status(status: str, _=Depends(open_close_db)):
     return {"message": "success", "data": items}
 
 
+@app.get("/eip-by-category-status/{category}/{status}")
+@cache(expire=CACHE_EXPIRE_SECONDS)
+async def get_eip_by_category_status(
+    category: str, status: str, _=Depends(open_close_db)
+):
+    if category.lower() == "all":
+        query = EIP.select(
+            EIP.eip,
+            EIP.title,
+            EIP.status,
+            EIP.category,
+            EIP.author,
+            EIP.type,
+            EIP.created,
+            EIP.requires,
+            EIP.last_call_deadline,
+        ).where((fn.Lower(EIP.status) == status.lower()))
+    else:
+        query = EIP.select(
+            EIP.eip,
+            EIP.title,
+            EIP.status,
+            EIP.category,
+            EIP.author,
+            EIP.type,
+            EIP.created,
+            EIP.requires,
+            EIP.last_call_deadline,
+        ).where(
+            (fn.Lower(EIP.status) == status.lower())
+            & (fn.Lower(EIP.category) == category.lower())
+        )
+    items = list(query.dicts())
+
+    return {"message": "success", "data": items}
+
+
+@app.get("/latest-eip-diffs-by-category/{category}")
+@cache(expire=CACHE_EXPIRE_SECONDS)
+async def get_latest_commits_by_category(category: str, _=Depends(open_close_db)):
+    if category.lower() == "all":
+        query = (
+            EIPDiffsWithCommitsView.select()
+            .order_by(EIPDiffsWithCommitsView.committed_datetime.desc())
+            .limit(50)
+        )
+    else:
+        query = (
+            EIPDiffsWithCommitsView.select()
+            .where(fn.Lower(EIPDiffsWithCommitsView.category) == category.lower())
+            .order_by(EIPDiffsWithCommitsView.committed_datetime.desc())
+            .limit(50)
+        )
+    items = list(query.dicts())
+    return {"message": "success", "data": items}
+
+
 def run():
     import uvicorn
 
