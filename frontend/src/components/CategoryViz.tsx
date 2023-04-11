@@ -56,27 +56,29 @@ export const EIPDiffsPerMonthChart = ({
   const colors = ['#8884d8', '#82ca9d', '#ffc658', '#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
 
   return (
-    <ResponsiveContainer width='100%' height={400}>
-      <AreaChart data={chartData}>
-        <CartesianGrid strokeDasharray='3 3' />
-        <XAxis dataKey='month' />
-        <YAxis />
-        <Tooltip />
-        <Legend />
-        {categories.map((category, index) => (
-          <Area
-            key={index}
-            type='monotone'
-            dataKey={category}
-            stackId='1'
-            // stroke={colors[index % colors.length]}
-            // fill={colors[index % colors.length]}
-            stroke={getCategoryColor(category)}
-            fill={getCategoryColor(category)}
-          />
-        ))}
-      </AreaChart>
-    </ResponsiveContainer>
+    <div className='w-full'>
+      <ResponsiveContainer width='100%' height={400}>
+        <AreaChart data={chartData}>
+          <CartesianGrid strokeDasharray='3 3' />
+          <XAxis dataKey='month' />
+          <YAxis />
+          <Tooltip />
+          <Legend />
+          {categories.map((category, index) => (
+            <Area
+              key={index}
+              type='monotone'
+              dataKey={category}
+              stackId='1'
+              // stroke={colors[index % colors.length]}
+              // fill={colors[index % colors.length]}
+              stroke={getCategoryColor(category)}
+              fill={getCategoryColor(category)}
+            />
+          ))}
+        </AreaChart>
+      </ResponsiveContainer>
+    </div>
   );
 };
 
@@ -89,7 +91,7 @@ export const LatestEIPTable = ({
   return (
     <div className='max-w-7xl mx-auto'>
       <h1 className='text-xl font-bold text-gray-900'>Latest EIP Diffs</h1>
-      <div className='max-w-[1216px] overflow-x-auto'>
+      <div className='overflow-x-auto'>
         <table className='w-full table-auto mt-2'>
           <thead className='bg-gray-200'>
             <tr>
@@ -143,9 +145,9 @@ export const EIPsInLastCallTable = ({
   lastCallEIPs,
 }: CategoryProps) => {
   return (
-    <div className='max-w-7xl mx-auto'>
+    <div className='w-full max-w-7xl mx-auto'>
       <h1 className='text-xl font-bold text-gray-900'>EIPs in Last Call</h1>
-      <div className='max-w-[1216px] overflow-x-auto'>
+      <div className='overflow-x-auto'>
         <table className='w-full table-auto mt-2'>
           <thead className='bg-gray-200'>
             <tr>
@@ -185,30 +187,32 @@ export const CategoryPage = ({
 }: CategoryProps) => {
   return (
     <Layout>
-      <div className='mx-auto max-w-[1216px]'>
-        <h1 className='text-xl font-bold text-gray-900'>EIP Commits by Category</h1>
-        <EIPDiffsPerMonthChart
-          category={category}
-          eipDiffs={eipDiffs}
-          eipDiffsPerMonth={eipDiffsPerMonth}
-          lastCallEIPs={lastCallEIPs}
-        />
-      </div>
-      <div className='mx-auto max-w-[1216px] mt-4'>
-        <EIPsInLastCallTable
-          category={category}
-          eipDiffs={eipDiffs}
-          eipDiffsPerMonth={eipDiffsPerMonth}
-          lastCallEIPs={lastCallEIPs}
-        />
-      </div>
-      <div className='mx-auto max-w-[1216px] mt-4'>
-        <LatestEIPTable
-          category={category}
-          eipDiffs={eipDiffs}
-          eipDiffsPerMonth={eipDiffsPerMonth}
-          lastCallEIPs={lastCallEIPs}
-        />
+      <div className='w-full mx-auto max-w-[1216px] px-4 md:px-0'>
+        <div>
+          <h1 className='text-xl font-bold text-gray-900'>EIP Commits by Category</h1>
+          <EIPDiffsPerMonthChart
+            category={category}
+            eipDiffs={eipDiffs}
+            eipDiffsPerMonth={eipDiffsPerMonth}
+            lastCallEIPs={lastCallEIPs}
+          />
+        </div>
+        <div>
+          <EIPsInLastCallTable
+            category={category}
+            eipDiffs={eipDiffs}
+            eipDiffsPerMonth={eipDiffsPerMonth}
+            lastCallEIPs={lastCallEIPs}
+          />
+        </div>
+        <div>
+          <LatestEIPTable
+            category={category}
+            eipDiffs={eipDiffs}
+            eipDiffsPerMonth={eipDiffsPerMonth}
+            lastCallEIPs={lastCallEIPs}
+          />
+        </div>
       </div>
     </Layout>
   );
