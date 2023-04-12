@@ -2,13 +2,14 @@ import 'tailwindcss/tailwind.css';
 import '../styles/globals.css';
 import type { AppProps } from 'next/app';
 import Head from 'next/head';
-
-const SITE_TITLE = 'eips.wtf';
-const SITE_DESCRIPTION = 'Enhanced stats for Ethereum Improvement Proposals (EIPs)';
-const SITE_DOMAIN = 'eips.wtf';
-const SITE = 'https://' + SITE_DOMAIN;
-const SITE_BANNER = '/ogp_banner.png';
-const SITE_TWITTER = '@0xren_cf';
+import {
+  SITE_TITLE,
+  SITE_DESCRIPTION,
+  SITE_DOMAIN,
+  SITE,
+  SITE_BANNER,
+  SITE_TWITTER,
+} from '../utils/constants';
 
 export default function App({ Component, pageProps }: AppProps) {
   return (

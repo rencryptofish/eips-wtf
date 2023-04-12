@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { EIP_CATEGORIES } from '@/utils/constants';
+import { EIP_CATEGORIES, GITHUB_REPO_URL } from '@/utils/constants';
 
 function Header() {
   return (
@@ -22,6 +22,18 @@ function Header() {
                 </Link>
               </li>
             ))}
+            <a
+              className='flex items-center font-bold'
+              href={GITHUB_REPO_URL}
+              target='_blank'
+              rel='noopener noreferrer'
+            >
+              <img
+                className='w-5 h-5 rounded-[15%]'
+                src='/github.svg'
+                alt='Electric Capital logo'
+              />
+            </a>
           </ul>
         </nav>
       </div>

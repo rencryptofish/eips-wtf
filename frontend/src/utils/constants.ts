@@ -1,3 +1,12 @@
+export const SITE_TITLE = 'eips.wtf';
+export const SITE_DESCRIPTION = 'Enhanced stats for Ethereum Improvement Proposals (EIPs)';
+export const SITE_DOMAIN = 'eips.wtf';
+export const SITE = 'https://' + SITE_DOMAIN;
+export const SITE_BANNER = '/ogp_banner.png';
+export const SITE_TWITTER = '@0xren_cf';
+export const BACKEND_URL = 'https://eips-wtf-server-production.up.railway.app';
+export const GITHUB_REPO_URL = 'https://github.com/rencryptofish/eips-wtf';
+
 export const EIP_CATEGORIES = [
   'All',
   'Core',

@@ -2,6 +2,7 @@ import Axios from 'axios';
 
 import { EIP } from '.././types/eip';
 import { EIPDiffsWithCommits, EIPDiffsPerMonth } from '.././types/eip_diff';
+import { BACKEND_URL } from './constants';
 
 const api = Axios.create({
   withCredentials: false,
@@ -11,7 +12,7 @@ const api = Axios.create({
     'Referrer-Policy': 'same-origin',
   },
   ...(typeof window === 'undefined' && {
-    baseURL: 'https://eips-wtf-server-production.up.railway.app',
+    baseURL: BACKEND_URL,
   }),
 });
 
@@ -48,7 +49,7 @@ export const getEIPByCategoryByStatus = async (
       } else {
         return 0;
       }
-    });    
+    });
   }
 
   return eips;
