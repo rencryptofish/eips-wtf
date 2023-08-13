@@ -25,6 +25,8 @@ class EIP(BaseModel):
     author: str
     status: str
     type: str
+    discussion: Optional[str]
+    discussion_count: Optional[int]
     category: Optional[str]
     created: date
     requires: List[int]

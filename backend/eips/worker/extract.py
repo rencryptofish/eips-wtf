@@ -7,7 +7,11 @@ import os
 import re
 from datetime import datetime, timezone
 from typing import List, Optional
-
+import requests
+from urllib.parse import urlparse
+from bs4 import BeautifulSoup
+from typing import Optional
+import time
 import frontmatter
 import git
 from pydriller import Commit, Repository
@@ -43,7 +47,6 @@ def _get_modified_files(commit) -> List[str]:
     modified_files = []
 
     for diff in commit.diff(commit.parents or []):
-        print(diff.change_type, diff.a_path, diff.b_path)
         if diff.change_type == "M":
             modified_files.append(diff.b_path)
 
@@ -62,6 +65,21 @@ def _get_category(metadata: dict) -> Optional[str]:
     return metadata.get("category")
 
 
+def _get_discussion_count(url) -> Optional[int]:
+    parsed_url = urlparse(url)
+    domain = parsed_url.netloc
+
+    if domain == "ethereum-magicians.org":
+        logger.info(f"Getting discussion count for {url}...")
+        response = requests.get(url)
+
+        soup = BeautifulSoup(response.text, "html.parser")
+        count = len(soup.find_all("div", class_="topic-body crawler-post"))
+        logger.info(f"Found discussion count for {url}  {count}")
+        time.sleep(1)
+        return count
+
+
 def _extract_eip(eip_path: str) -> EIP:
     # Extracting EIPs from markdown files
     with open(eip_path, "r") as file:
@@ -76,12 +94,23 @@ def _extract_eip(eip_path: str) -> EIP:
     if isinstance(requires, int):
         requires = [requires]
 
+    # Extracting discussion count from discussion link
+    discussion = metadata.get("discussions-to")
+    count = None
+    try:
+        count = _get_discussion_count(metadata["discussions-to"])
+    except Exception as e:
+        logger.error(f"Error getting discussion count for {discussion}: {e}")
+        pass
+
     return EIP(
         eip=metadata["eip"],
         title=metadata["title"],
         author=metadata["author"],
         status=metadata["status"],
         type=metadata["type"],
+        discussion=discussion,
+        discussion_count=count,
         category=_get_category(metadata),
         created=metadata["created"],
         requires=requires,
@@ -160,6 +189,8 @@ def _insert_eips(db_conn, eips: List[EIP]) -> None:
                     author,
                     status,
                     type,
+                    discussion,
+                    discussion_count,
                     category,
                     created,
                     requires,
@@ -171,6 +202,8 @@ def _insert_eips(db_conn, eips: List[EIP]) -> None:
                     %(author)s,
                     %(status)s,
                     %(type)s,
+                    %(discussion)s,
+                    %(discussion_count)s,
                     %(category)s,
                     %(created)s,
                     %(requires)s,
@@ -182,6 +215,8 @@ def _insert_eips(db_conn, eips: List[EIP]) -> None:
                     author = %(author)s,
                     status = %(status)s,
                     type = %(type)s,
+                    discussion = %(discussion)s,
+                    discussion_count = %(discussion_count)s,
                     category = %(category)s,
                     created = %(created)s,
                     requires = %(requires)s,
