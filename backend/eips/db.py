@@ -98,6 +98,8 @@ class EIPDiffsWithCommitsView(BaseModel):
     author_name = TextField()
     type = CharField(max_length=255)
     category = CharField(max_length=255, null=True)
+    discussion = TextField(null=True)
+    discussion_count = IntegerField(null=True)
 
     class Meta:
         table_name = "eip_diffs_with_commits_view"

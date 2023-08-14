@@ -9,6 +9,8 @@ export interface EIPDiffsWithCommits {
   author_name: string;
   type: string;
   category: string;
+  discussion: string | null;
+  discussion_count: number | null;
 }
 
 export interface EIPDiffsPerMonth {

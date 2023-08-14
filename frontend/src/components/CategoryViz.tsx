@@ -100,6 +100,7 @@ export const LatestEIPTable = ({
               <th className='text-center py-2 truncate'>Title</th>
               <th className='text-center py-2 truncate'>Commit</th>
               <th className='text-center py-2 truncate'>Committed</th>
+              <th className='text-center py-2 truncate'>Discussion</th>
               <th className='text-center py-2 truncate'>Message</th>
               <th className='text-center py-2 truncate'>Author</th>
             </tr>
@@ -127,6 +128,20 @@ export const LatestEIPTable = ({
                 <td className='border px-4 py-2' style={{ minWidth: '100px' }}>
                   {formatDaysAgo(eipDiff.committed_datetime)}
                 </td>
+
+                <td className='border px-4 py-2'>
+                  {eipDiff.discussion && eipDiff.discussion_count !== null ? (
+                    <Link href={eipDiff.discussion} passHref target='_blank'>
+                      <span className='text-blue-600 hover:text-blue-800'>
+                        {eipDiff.discussion_count}
+                      </span>
+                    </Link>
+                  ) : (
+                    <span className='text-gray-400'>N/A</span>
+                  )}
+                </td>
+
+
                 <td className='border px-4 py-2'>{eipDiff.message}</td>
                 <td className='border px-4 py-2'>{eipDiff.author_name}</td>
               </tr>
