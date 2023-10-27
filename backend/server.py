@@ -3,7 +3,7 @@ from fastapi import Depends, FastAPI
 from fastapi_cache import FastAPICache
 from fastapi_cache.backends.inmemory import InMemoryBackend
 from fastapi_cache.decorator import cache
-from peewee import JOIN, fn
+from peewee import fn
 
 from eips.db import (
     EIP,

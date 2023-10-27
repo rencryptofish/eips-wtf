@@ -3,178 +3,14 @@ Extract useful metadata from the EIPs repo
 """
 
 import logging
-import os
-import re
-from datetime import datetime, timezone
-from typing import List, Optional
-import requests
-from urllib.parse import urlparse
-from bs4 import BeautifulSoup
-from typing import Optional
-import time
-import frontmatter
-import git
-from pydriller import Commit, Repository
+from typing import List, Type
 
-from eips.schemas import EIP, EIPCommit, EIPDiff
-from eips.worker import BACKEND_PATH
+from playhouse.pool import PooledPostgresqlExtDatabase
+
+from eips.eip_repo import BaseEIPRepo, EIPCoreRepo, EIPERCRepo
+from eips.schemas import EIP, EIPCommit
 
 logger = logging.getLogger(__name__)
-
-REPO_CLONE_URL = "https://github.com/ethereum/EIPs.git"
-LOCAL_REPO_PATH = os.path.join(BACKEND_PATH, "eips-repo")
-
-
-def checkout_repo() -> None:
-    if os.path.exists(LOCAL_REPO_PATH):
-        logger.info(f"Deleting {LOCAL_REPO_PATH}...")
-        os.system(f"rm -rf {LOCAL_REPO_PATH}")
-
-    os.makedirs(LOCAL_REPO_PATH, exist_ok=True)
-
-    logger.info(f"Cloning {REPO_CLONE_URL} to {LOCAL_REPO_PATH}...")
-    repo = git.Repo.clone_from(REPO_CLONE_URL, LOCAL_REPO_PATH)
-    logger.info("Done cloning.")
-
-
-def delete_repo() -> None:
-    if os.path.exists(LOCAL_REPO_PATH):
-        logger.info(f"Deleting {LOCAL_REPO_PATH}...")
-        os.system(f"rm -rf {LOCAL_REPO_PATH}")
-
-
-def _get_modified_files(commit) -> List[str]:
-    modified_files = []
-
-    for diff in commit.diff(commit.parents or []):
-        if diff.change_type == "M":
-            modified_files.append(diff.b_path)
-
-    return modified_files
-
-
-def _get_category(metadata: dict) -> Optional[str]:
-    if metadata.get("type") == "Meta":
-        # Meta EIPs don't have a category
-        return "Meta"
-
-    if metadata.get("type") == "Informational":
-        # Informational EIPs don't have a category
-        return "Informational"
-
-    return metadata.get("category")
-
-
-def _get_discussion_count(url) -> Optional[int]:
-    parsed_url = urlparse(url)
-    domain = parsed_url.netloc
-
-    if domain == "ethereum-magicians.org":
-        logger.info(f"Getting discussion count for {url}...")
-        response = requests.get(url)
-
-        soup = BeautifulSoup(response.text, "html.parser")
-        count = len(soup.find_all("div", class_="topic-body crawler-post"))
-        logger.info(f"Found discussion count for {url}  {count}")
-        time.sleep(1)
-        return count
-
-
-def _extract_eip(eip_path: str) -> EIP:
-    # Extracting EIPs from markdown files
-    with open(eip_path, "r") as file:
-        content = file.read()
-
-    metadata, content = frontmatter.parse(content)
-
-    requires = metadata.get("requires", [])
-    if isinstance(requires, str) and "," in requires:
-        requires = [int(r) for r in requires.split(",")]
-
-    if isinstance(requires, int):
-        requires = [requires]
-
-    # Extracting discussion count from discussion link
-    discussion = metadata.get("discussions-to")
-    count = None
-    try:
-        count = _get_discussion_count(metadata["discussions-to"])
-    except Exception as e:
-        logger.error(f"Error getting discussion count for {discussion}: {e}")
-        pass
-
-    return EIP(
-        eip=metadata["eip"],
-        title=metadata["title"],
-        author=metadata["author"],
-        status=metadata["status"],
-        type=metadata["type"],
-        discussion=discussion,
-        discussion_count=count,
-        category=_get_category(metadata),
-        created=metadata["created"],
-        requires=requires,
-        last_call_deadline=metadata.get("last-call-deadline"),
-        content=content,
-    )
-
-
-def extract_eips(repo_path: str = LOCAL_REPO_PATH) -> List[EIP]:
-    logger.info("Extracting EIPs...")
-    eips_folder = os.path.join(repo_path, "EIPS")
-    eips = []
-
-    for filename in os.listdir(eips_folder):
-        if filename.startswith("eip-"):
-            eip = _extract_eip(os.path.join(eips_folder, filename))
-            eips.append(eip)
-
-    return eips
-
-
-def _is_eip_filename(filename) -> bool:
-    pattern = r"eip-\d+\.md"
-    return bool(re.match(pattern, filename))
-
-
-def _parse_commit_for_eip_diffs(commit: Commit) -> List[EIPDiff]:
-    eip_diffs = []
-
-    for m in commit.modified_files:
-        if _is_eip_filename(m.filename):
-            eip_diffs.append(
-                EIPDiff(
-                    eip=int(m.filename.split("-")[1].split(".")[0]),
-                    hexsha=commit.hash,
-                )
-            )
-
-    return eip_diffs
-
-
-def _git_tzoffset_to_datetime(dt) -> datetime:
-    return dt.astimezone(timezone.utc)
-
-
-def get_commits(repo_path: str = LOCAL_REPO_PATH) -> List[EIPCommit]:
-    logger.info("Extracting commits...")
-    repo = Repository(repo_path)
-    commits = []
-    for commit in repo.traverse_commits():
-        eip_diffs = _parse_commit_for_eip_diffs(commit)
-
-        eip_commit = EIPCommit(
-            hexsha=commit.hash,
-            committed_datetime=commit.committer_date.astimezone(timezone.utc),
-            authored_datetime=commit.author_date.astimezone(timezone.utc),
-            message=commit.msg,
-            author_email=commit.author.email,
-            author_name=commit.author.name,
-            eip_diffs=eip_diffs,
-        )
-        commits.append(eip_commit)
-
-    return commits
 
 
 def _insert_eips(db_conn, eips: List[EIP]) -> None:
@@ -275,11 +111,20 @@ def _insert_commits(db_conn, commits: List[EIPCommit]) -> None:
         db_conn.commit()
 
 
-def process_extraction(db_conn):
-    logger.info("Extracting EIPs...")
-    checkout_repo()
-    eips = extract_eips()
-    commits = get_commits()
+def process_repo(db_conn: PooledPostgresqlExtDatabase, eip_repo: Type[BaseEIPRepo]):
+    eip_repo.checkout_repo()
+    eips = eip_repo.extract_eips()
+    commits = eip_repo.extract_eip_commits()
     _insert_eips(db_conn, eips)
     _insert_commits(db_conn, commits)
-    delete_repo()
+    eip_repo.delete_repo()
+
+
+def process_extraction(db_conn: PooledPostgresqlExtDatabase):
+    logger.info("Extracting EIPs...")
+    process_repo(
+        db_conn, EIPCoreRepo("https://github.com/ethereum/EIPs.git", "EIPS", "eip")
+    )
+    process_repo(
+        db_conn, EIPERCRepo("https://github.com/ethereum/ERCs.git", "ERCS", "erc")
+    )
