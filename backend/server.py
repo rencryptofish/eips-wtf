@@ -5,14 +5,8 @@ from fastapi_cache.backends.inmemory import InMemoryBackend
 from fastapi_cache.decorator import cache
 from peewee import fn
 
-from eips.db import (
-    EIP,
-    Commit,
-    EIPDiff,
-    EIPDiffsPerMonthView,
-    EIPDiffsWithCommitsView,
-    get_db_conn,
-)
+from eips.db import (EIP, Commit, EIPDiff, EIPDiffsPerMonthView,
+                     EIPDiffsWithCommitsView, get_db_conn)
 
 CACHE_EXPIRE_SECONDS = 60 * 60  # 1 hour
 
