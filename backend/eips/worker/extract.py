@@ -112,6 +112,7 @@ def _insert_commits(db_conn, commits: List[EIPCommit]) -> None:
 
 
 def process_repo(db_conn: PooledPostgresqlExtDatabase, eip_repo: Type[BaseEIPRepo]):
+    logger.info(f"Processing {eip_repo.git_url}...")
     eip_repo.checkout_repo()
     eips = eip_repo.extract_eips()
     commits = eip_repo.extract_eip_commits()
@@ -121,7 +122,6 @@ def process_repo(db_conn: PooledPostgresqlExtDatabase, eip_repo: Type[BaseEIPRep
 
 
 def process_extraction(db_conn: PooledPostgresqlExtDatabase):
-    logger.info("Extracting EIPs...")
     process_repo(
         db_conn, EIPCoreRepo("https://github.com/ethereum/EIPs.git", "EIPS", "eip")
     )

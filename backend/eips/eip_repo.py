@@ -67,17 +67,15 @@ class BaseEIPRepo(ABC):
 
         return eips
 
-    @staticmethod
-    def _is_eip_filename(filename: str) -> bool:
-        pattern = r"eip-\d+\.md"
+    def _is_eip_filename(self, filename: str) -> bool:
+        pattern = rf"{self.eip_prefix}-\d+\.md"
         return bool(re.match(pattern, filename))
 
-    @classmethod
-    def _parse_commit_for_eip_diffs(cls, commit: Commit) -> List[EIPDiff]:
+    def _parse_commit_for_eip_diffs(self, commit: Commit) -> List[EIPDiff]:
         eip_diffs = []
 
         for m in commit.modified_files:
-            if cls._is_eip_filename(m.filename):
+            if self._is_eip_filename(m.filename):
                 eip_diffs.append(
                     EIPDiff(
                         eip=int(m.filename.split("-")[1].split(".")[0]),
