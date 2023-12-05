@@ -8,7 +8,7 @@ license = "MIT"
 
 [tool.poetry.dependencies]
 python = "^3.10"
-gitpython = "^3.1.30"
+gitpython = "^3.1.33"
 psycopg2 = "^2.9.6"
 peewee = "^3.16.0"
 pydantic = "^1.10.7"
@@ -20,6 +20,9 @@ uvicorn = "^0.21.1"
 python-dotenv = "^1.0.0"
 pandas = "^2.0.0"
 beautifulsoup4 = "^4.12.2"
+cryptography = "^41.0.4"
+urllib3 = "^1.26.17"
+aiohttp = "^3.8.6"
 
 [tool.poetry.dev-dependencies]
 black = "^23.3.0"
