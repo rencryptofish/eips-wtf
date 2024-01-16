@@ -91,7 +91,7 @@ export const LatestEIPTable = ({
   return (
     <div className='max-w-7xl mx-auto'>
       <h1 className='text-xl font-bold text-gray-900'>Latest EIP Diffs</h1>
-      <div className='overflow-x-auto'>
+      <div>
         <table className='w-full table-auto mt-2'>
           <thead className='bg-gray-200'>
             <tr>
