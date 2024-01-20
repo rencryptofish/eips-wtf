@@ -27,8 +27,11 @@ function formatHexsha(hexsha: string): string {
   return hexsha.substring(0, 7);
 }
 
-const getGithubCommitUrl = (hexsha: string) => {
-  return `https://github.com/ethereum/EIPs/commit/${hexsha}`;
+const getGithubCommitUrl = (eipDiff: EIPDiffsWithCommits) => {
+  if (eipDiff.category == 'ERC') {
+    return `https://github.com/ethereum/ERCs/commit/${eipDiff.hexsha}`
+  }
+  return `https://github.com/ethereum/EIPs/commit/${eipDiff.hexsha}`;
 };
 
 const formatDaysAgo = (datetime: string | null | undefined) => {
@@ -119,7 +122,7 @@ export const LatestEIPTable = ({
                 <td className='border px-4 py-2'>{eipDiff.title}</td>
 
                 <td className='border px-4 py-2'>
-                  <Link href={getGithubCommitUrl(eipDiff.hexsha)} passHref target='_blank'>
+                  <Link href={getGithubCommitUrl(eipDiff)} passHref target='_blank'>
                     <span className='text-blue-600 hover:text-blue-800'>
                       {formatHexsha(eipDiff.hexsha)}
                     </span>
