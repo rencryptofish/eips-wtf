@@ -56,14 +56,15 @@ export const EIPDiffsPerMonthChart = ({
   } else {
     categories = [category];
   }
-  const colors = ['#8884d8', '#82ca9d', '#ffc658', '#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
 
   return (
-    <div className='w-full'>
-      <ResponsiveContainer width='100%' height={400}>
+    <div className='w-full px-2'>
+      <ResponsiveContainer width='100%' height={300}>
         <AreaChart data={chartData}>
           <CartesianGrid strokeDasharray='3 3' />
-          <XAxis dataKey='month' />
+          <XAxis dataKey='month'>
+            <Label value="Month" offset={-5} position="insideBottom" />
+          </XAxis>
           <YAxis />
           <Tooltip />
           <Legend />
@@ -73,8 +74,6 @@ export const EIPDiffsPerMonthChart = ({
               type='monotone'
               dataKey={category}
               stackId='1'
-              // stroke={colors[index % colors.length]}
-              // fill={colors[index % colors.length]}
               stroke={getCategoryColor(category)}
               fill={getCategoryColor(category)}
             />
@@ -92,47 +91,41 @@ export const LatestEIPTable = ({
   lastCallEIPs,
 }: CategoryProps) => {
   return (
-    <div className='max-w-7xl mx-auto'>
-      <h1 className='text-xl font-bold text-gray-900'>Latest EIP Diffs</h1>
-      <div>
+    <div className='w-full max-w-7xl mx-auto px-2'>
+      <h1 className='text-lg font-bold text-gray-900'>Latest EIP Diffs</h1>
+      <div className='overflow-x-auto'>
         <table className='w-full table-auto mt-2'>
           <thead className='bg-gray-200'>
             <tr>
-              <th className='text-center py-2 truncate'>Category</th>
-              <th className='text-center py-2 truncate'>EIP</th>
-              <th className='text-center py-2 truncate'>Title</th>
-              <th className='text-center py-2 truncate'>Commit</th>
-              <th className='text-center py-2 truncate'>Committed</th>
-              <th className='text-center py-2 truncate'>Discussion</th>
-              <th className='text-center py-2 truncate'>Message</th>
-              <th className='text-center py-2 truncate'>Author</th>
+              <th className='text-center py-2 text-sm truncate'>Category</th>
+              <th className='text-center py-2 text-sm truncate'>EIP</th>
+              <th className='text-center py-2 text-sm truncate'>Title</th>
+              <th className='text-center py-2 text-sm truncate'>Commit</th>
+              <th className='text-center py-2 text-sm truncate'>Committed</th>
+              <th className='text-center py-2 text-sm truncate'>Discussion</th>
+              <th className='text-center py-2 text-sm truncate'>Message</th>
+              <th className='text-center py-2 text-sm truncate'>Author</th>
             </tr>
           </thead>
           <tbody>
             {eipDiffs.map((eipDiff, index) => (
               <tr key={index}>
-                <td className='border px-4 py-2'>{eipDiff.category}</td>
-
-                <td className='border px-4 py-2'>
+                <td className='border px-2 py-1 text-sm'>{eipDiff.category}</td>
+                <td className='border px-2 py-1 text-sm'>
                   <Link href={`https://eips.ethereum.org/EIPS/eip-${eipDiff.eip}`} target='_blank'>
                     <span className='text-blue-600 hover:text-blue-800'>{eipDiff.eip}</span>
                   </Link>
                 </td>
-
-                <td className='border px-4 py-2'>{eipDiff.title}</td>
-
-                <td className='border px-4 py-2'>
+                <td className='border px-2 py-1 text-sm'>{eipDiff.title}</td>
+                <td className='border px-2 py-1 text-sm'>
                   <Link href={getGithubCommitUrl(eipDiff)} passHref target='_blank'>
                     <span className='text-blue-600 hover:text-blue-800'>
                       {formatHexsha(eipDiff.hexsha)}
                     </span>
                   </Link>
                 </td>
-                <td className='border px-4 py-2' style={{ minWidth: '100px' }}>
-                  {formatDaysAgo(eipDiff.committed_datetime)}
-                </td>
-
-                <td className='border px-4 py-2'>
+                <td className='border px-2 py-1 text-sm'>{formatDaysAgo(eipDiff.committed_datetime)}</td>
+                <td className='border px-2 py-1 text-sm'>
                   {eipDiff.discussion && eipDiff.discussion_count !== null ? (
                     <Link href={eipDiff.discussion} passHref target='_blank'>
                       <span className='text-blue-600 hover:text-blue-800'>
@@ -143,10 +136,8 @@ export const LatestEIPTable = ({
                     <span className='text-gray-400'>N/A</span>
                   )}
                 </td>
-
-
-                <td className='border px-4 py-2'>{eipDiff.message}</td>
-                <td className='border px-4 py-2'>{eipDiff.author_name}</td>
+                <td className='border px-2 py-1 text-sm'>{eipDiff.message}</td>
+                <td className='border px-2 py-1 text-sm'>{eipDiff.author_name}</td>
               </tr>
             ))}
           </tbody>
@@ -163,31 +154,31 @@ export const EIPsInLastCallTable = ({
   lastCallEIPs,
 }: CategoryProps) => {
   return (
-    <div className='w-full max-w-7xl mx-auto'>
-      <h1 className='text-xl font-bold text-gray-900'>EIPs in Last Call</h1>
+    <div className='w-full max-w-7xl mx-auto px-2'>
+      <h1 className='text-lg font-bold text-gray-900'>EIPs in Last Call</h1>
       <div className='overflow-x-auto'>
         <table className='w-full table-auto mt-2'>
           <thead className='bg-gray-200'>
             <tr>
-              <th className='text-center py-2 truncate'>Category</th>
-              <th className='text-center py-2 truncate'>EIP</th>
-              <th className='text-center py-2 truncate'>Title</th>
-              <th className='text-center py-2 truncate'>Author</th>
-              <th className='text-center py-2 truncate'>Last Call Deadline</th>
+              <th className='text-center py-2 text-sm truncate'>Category</th>
+              <th className='text-center py-2 text-sm truncate'>EIP</th>
+              <th className='text-center py-2 text-sm truncate'>Title</th>
+              <th className='text-center py-2 text-sm truncate'>Author</th>
+              <th className='text-center py-2 text-sm truncate'>Last Call Deadline</th>
             </tr>
           </thead>
           <tbody>
             {lastCallEIPs.map((eip) => (
               <tr key={eip.eip}>
-                <td className='border px-4 py-2'>{eip.category}</td>
-                <td className='border px-4 py-2'>
+                <td className='border px-2 py-1 text-sm'>{eip.category}</td>
+                <td className='border px-2 py-1 text-sm'>
                   <Link href={`https://eips.ethereum.org/EIPS/eip-${eip.eip}`} target='_blank'>
                     <span className='text-blue-600 hover:text-blue-800'>{eip.eip}</span>
                   </Link>
                 </td>
-                <td className='border px-4 py-2'>{eip.title}</td>
-                <td className='border px-4 py-2'>{eip.author}</td>
-                <td className='border px-4 py-2'>{formatDaysAgo(eip.last_call_deadline)}</td>
+                <td className='border px-2 py-1 text-sm'>{eip.title}</td>
+                <td className='border px-2 py-1 text-sm'>{eip.author}</td>
+                <td className='border px-2 py-1 text-sm'>{formatDaysAgo(eip.last_call_deadline)}</td>
               </tr>
             ))}
           </tbody>
@@ -205,9 +196,9 @@ export const CategoryPage = ({
 }: CategoryProps) => {
   return (
     <Layout>
-      <div className='w-full mx-auto max-w-[1216px] px-4 md:px-0'>
-        <div>
-          <h1 className='text-xl font-bold text-gray-900'>EIP Commits by Category</h1>
+      <div className='w-full mx-auto max-w-[1216px] px-4 sm:px-2'>
+        <div className='mb-4'>
+          <h1 className='text-xl font-bold text-gray-900 mb-2'>EIP Commits by Category</h1>
           <EIPDiffsPerMonthChart
             category={category}
             eipDiffs={eipDiffs}
@@ -215,7 +206,7 @@ export const CategoryPage = ({
             lastCallEIPs={lastCallEIPs}
           />
         </div>
-        <div>
+        <div className='mb-4'>
           <EIPsInLastCallTable
             category={category}
             eipDiffs={eipDiffs}
@@ -235,5 +226,3 @@ export const CategoryPage = ({
     </Layout>
   );
 };
-
-export default CategoryPage;

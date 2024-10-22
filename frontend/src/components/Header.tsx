@@ -31,7 +31,7 @@ function Header() {
               <img
                 className='w-5 h-5 rounded-[15%]'
                 src='/github.svg'
-                alt='Electric Capital logo'
+                alt='Github logo'
               />
             </a>
           </ul>
