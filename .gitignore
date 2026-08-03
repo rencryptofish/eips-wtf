@@ -143,8 +143,10 @@ logs
 results
 tmp
 
-# Build
+# Build and local browser QA
 public/css/main.css
+.playwright-cli/
+output/
 
 # Coverage reports
 coverage
@@ -169,5 +171,3 @@ dist/**/*
 
 # ignore yarn.lock
 yarn.lock
-
-eips-repo/

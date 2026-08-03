@@ -8,13 +8,13 @@ export interface EIPDiffsWithCommits {
   author_email: string;
   author_name: string;
   type: string;
-  category: string;
+  category: string | null;
   discussion: string | null;
   discussion_count: number | null;
+  repository: 'EIPs' | 'ERCs';
 }
 
 export interface EIPDiffsPerMonth {
   month: string;
-  category: string;
-  count: number;
+  [category: string]: string | number;
 }

@@ -8,4 +8,6 @@ export interface EIP {
   created: string;
   requires: number[] | null;
   last_call_deadline: string | null;
+  discussion?: string | null;
+  repository?: 'EIPs' | 'ERCs';
 }

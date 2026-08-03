@@ -1,11 +1,28 @@
-# EIPs.wtf (frontend)
+# eips.wtf frontend
 
-## Getting Started
-
-Run the development server:
+The frontend is a React 19 application built with Vite. Vite produces a client bundle
+and a temporary SSR bundle; `scripts/prerender.mjs` uses the latter to render every
+category route to static HTML, embeds only that route's data for hydration, and then
+removes the temporary bundle. GitHub Pages serves the generated static files; React is
+never rendered on the server per request.
 
 ```bash
+npm ci
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+The development server is available at <http://localhost:5173>. It reads the checked-in
+snapshot from `data/eips.json` and supports direct navigation to every category path.
+
+Production checks and build:
+
+```bash
+npm run format:check
+npm run lint
+npm run typecheck
+npm run build
+npm run preview
+```
+
+The deployable static site is written to `dist/`. Local development and production
+builds require no environment variables.

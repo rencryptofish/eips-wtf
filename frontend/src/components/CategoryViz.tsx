@@ -1,228 +1,123 @@
-import { EIPDiffsWithCommits, EIPDiffsPerMonth } from '../types/eip_diff';
-import { EIP } from '../types/eip';
+import ActivityChart from '@/components/ActivityChart';
+import ActivityFeed from '@/components/ActivityFeed';
 import Layout from '@/components/Layout';
-import Link from 'next/link';
-import { formatDistance } from 'date-fns';
-import {
-  AreaChart,
-  Area,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-  Label,
-} from 'recharts';
-import { EIP_CATEGORIES, getCategoryColor } from '@/utils/constants';
+import LastCallList from '@/components/LastCallList';
+import { CategoryPageProps } from '@/types/dashboard';
+import { CATEGORY_DETAILS } from '@/utils/constants';
+import { MonthlyActivity, getMonthlyActivity } from '@/utils/dashboard';
+import { formatNumber } from '@/utils/formatters';
 
-export type CategoryProps = {
-  category: string;
-  eipDiffs: EIPDiffsWithCommits[];
-  eipDiffsPerMonth: EIPDiffsPerMonth[];
-  lastCallEIPs: EIP[];
-};
+const yearOverYearFormatter = new Intl.NumberFormat('en-US', {
+  maximumFractionDigits: 1,
+  signDisplay: 'exceptZero',
+  style: 'percent',
+});
 
-function formatHexsha(hexsha: string): string {
-  return hexsha.substring(0, 7);
+function getPreviousYearMonth(month: string): string {
+  return `${Number(month.slice(0, 4)) - 1}${month.slice(4)}`;
 }
 
-const getGithubCommitUrl = (eipDiff: EIPDiffsWithCommits) => {
-  if (eipDiff.category == 'ERC') {
-    return `https://github.com/ethereum/ERCs/commit/${eipDiff.hexsha}`
-  }
-  return `https://github.com/ethereum/EIPs/commit/${eipDiff.hexsha}`;
-};
-
-const formatDaysAgo = (datetime: string | null | undefined) => {
-  if (!datetime) {
-    return 'Unknown';
-  }
-  const daysAgo = formatDistance(new Date(datetime), new Date(), { addSuffix: true });
-  return daysAgo;
-};
-
-export const EIPDiffsPerMonthChart = ({
-  category,
-  eipDiffs,
-  eipDiffsPerMonth,
-  lastCallEIPs,
-}: CategoryProps) => {
-  const chartData = Object.values(eipDiffsPerMonth);
-
-  var categories = [];
-  if (category.toLowerCase() == 'all') {
-    categories = EIP_CATEGORIES.map((category) => category.toLowerCase());
-  } else {
-    categories = [category];
+function getYearOverYearValue(current: number, previous: number): string {
+  if (previous === 0) {
+    return current === 0 ? '0% (0 vs 0)' : `${formatNumber(current)} (up from 0)`;
   }
 
-  return (
-    <div className='w-full px-2'>
-      <ResponsiveContainer width='100%' height={300}>
-        <AreaChart data={chartData}>
-          <CartesianGrid strokeDasharray='3 3' />
-          <XAxis dataKey='month'>
-            <Label value="Month" offset={-5} position="insideBottom" />
-          </XAxis>
-          <YAxis />
-          <Tooltip />
-          <Legend />
-          {categories.map((category, index) => (
-            <Area
-              key={index}
-              type='monotone'
-              dataKey={category}
-              stackId='1'
-              stroke={getCategoryColor(category)}
-              fill={getCategoryColor(category)}
-            />
-          ))}
-        </AreaChart>
-      </ResponsiveContainer>
-    </div>
-  );
-};
+  const change = (current - previous) / previous;
+  return `${yearOverYearFormatter.format(change)} (${formatNumber(
+    current,
+  )} vs ${formatNumber(previous)})`;
+}
 
-export const LatestEIPTable = ({
+function YearOverYearValue({ current, previous }: { current: number; previous: number }) {
+  const direction = current === previous ? 'flat' : current > previous ? 'up' : 'down';
+  const directionSymbol = direction === 'up' ? '↑' : direction === 'down' ? '↓' : '→';
+  const directionLabel = direction === 'up' ? 'up' : direction === 'down' ? 'down' : 'unchanged';
+  const colorClass =
+    direction === 'up'
+      ? 'text-emerald-700'
+      : direction === 'down'
+        ? 'text-red-700'
+        : 'text-slate-700';
+  const value = getYearOverYearValue(current, previous);
+
+  return (
+    <span className={`font-semibold ${colorClass}`} aria-label={`${directionLabel} ${value}`}>
+      <span aria-hidden='true'>{directionSymbol}</span> {value}
+    </span>
+  );
+}
+
+function getYearOverYearComparison(
+  data: MonthlyActivity[],
+): { current: MonthlyActivity; previous: MonthlyActivity } | null {
+  const current = data.at(-1);
+  if (!current) return null;
+
+  const previous = data.find((row) => row.month === getPreviousYearMonth(current.month));
+  if (!previous) return null;
+
+  return { current, previous };
+}
+
+export function CategoryPage({
   category,
   eipDiffs,
   eipDiffsPerMonth,
+  generatedAt,
   lastCallEIPs,
-}: CategoryProps) => {
-  return (
-    <div className='w-full max-w-7xl mx-auto px-2'>
-      <h1 className='text-lg font-bold text-gray-900'>Latest EIP Diffs</h1>
-      <div className='overflow-x-auto'>
-        <table className='w-full table-auto mt-2'>
-          <thead className='bg-gray-200'>
-            <tr>
-              <th className='text-center py-2 text-sm truncate'>Category</th>
-              <th className='text-center py-2 text-sm truncate'>EIP</th>
-              <th className='text-center py-2 text-sm truncate'>Title</th>
-              <th className='text-center py-2 text-sm truncate'>Commit</th>
-              <th className='text-center py-2 text-sm truncate'>Committed</th>
-              <th className='text-center py-2 text-sm truncate'>Discussion</th>
-              <th className='text-center py-2 text-sm truncate'>Message</th>
-              <th className='text-center py-2 text-sm truncate'>Author</th>
-            </tr>
-          </thead>
-          <tbody>
-            {eipDiffs.map((eipDiff, index) => (
-              <tr key={index}>
-                <td className='border px-2 py-1 text-sm'>{eipDiff.category}</td>
-                <td className='border px-2 py-1 text-sm'>
-                  <Link href={`https://eips.ethereum.org/EIPS/eip-${eipDiff.eip}`} target='_blank'>
-                    <span className='text-blue-600 hover:text-blue-800'>{eipDiff.eip}</span>
-                  </Link>
-                </td>
-                <td className='border px-2 py-1 text-sm'>{eipDiff.title}</td>
-                <td className='border px-2 py-1 text-sm'>
-                  <Link href={getGithubCommitUrl(eipDiff)} passHref target='_blank'>
-                    <span className='text-blue-600 hover:text-blue-800'>
-                      {formatHexsha(eipDiff.hexsha)}
-                    </span>
-                  </Link>
-                </td>
-                <td className='border px-2 py-1 text-sm'>{formatDaysAgo(eipDiff.committed_datetime)}</td>
-                <td className='border px-2 py-1 text-sm'>
-                  {eipDiff.discussion && eipDiff.discussion_count !== null ? (
-                    <Link href={eipDiff.discussion} passHref target='_blank'>
-                      <span className='text-blue-600 hover:text-blue-800'>
-                        {eipDiff.discussion_count}
-                      </span>
-                    </Link>
-                  ) : (
-                    <span className='text-gray-400'>N/A</span>
-                  )}
-                </td>
-                <td className='border px-2 py-1 text-sm'>{eipDiff.message}</td>
-                <td className='border px-2 py-1 text-sm'>{eipDiff.author_name}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
+}: CategoryPageProps) {
+  const categoryLabel = CATEGORY_DETAILS[category].label;
+  const yearOverYearComparison = getYearOverYearComparison(
+    getMonthlyActivity(eipDiffsPerMonth, category),
   );
-};
 
-export const EIPsInLastCallTable = ({
-  category,
-  eipDiffs,
-  eipDiffsPerMonth,
-  lastCallEIPs,
-}: CategoryProps) => {
   return (
-    <div className='w-full max-w-7xl mx-auto px-2'>
-      <h1 className='text-lg font-bold text-gray-900'>EIPs in Last Call</h1>
-      <div className='overflow-x-auto'>
-        <table className='w-full table-auto mt-2'>
-          <thead className='bg-gray-200'>
-            <tr>
-              <th className='text-center py-2 text-sm truncate'>Category</th>
-              <th className='text-center py-2 text-sm truncate'>EIP</th>
-              <th className='text-center py-2 text-sm truncate'>Title</th>
-              <th className='text-center py-2 text-sm truncate'>Author</th>
-              <th className='text-center py-2 text-sm truncate'>Last Call Deadline</th>
-            </tr>
-          </thead>
-          <tbody>
-            {lastCallEIPs.map((eip) => (
-              <tr key={eip.eip}>
-                <td className='border px-2 py-1 text-sm'>{eip.category}</td>
-                <td className='border px-2 py-1 text-sm'>
-                  <Link href={`https://eips.ethereum.org/EIPS/eip-${eip.eip}`} target='_blank'>
-                    <span className='text-blue-600 hover:text-blue-800'>{eip.eip}</span>
-                  </Link>
-                </td>
-                <td className='border px-2 py-1 text-sm'>{eip.title}</td>
-                <td className='border px-2 py-1 text-sm'>{eip.author}</td>
-                <td className='border px-2 py-1 text-sm'>{formatDaysAgo(eip.last_call_deadline)}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  );
-};
+    <Layout currentCategory={category}>
+      <div className='page-shell pb-4'>
+        <section
+          className='content-section'
+          aria-labelledby='trend-heading'
+          aria-describedby='trend-footnote'
+        >
+          <div className='section-heading'>
+            <div>
+              <p className='eyebrow'>Long-term signal</p>
+              <h2 id='trend-heading'>{categoryLabel} proposal changes and contributors by month</h2>
+              {yearOverYearComparison ? (
+                <p>
+                  YoY: proposal changes{' '}
+                  <YearOverYearValue
+                    current={yearOverYearComparison.current.changes}
+                    previous={yearOverYearComparison.previous.changes}
+                  />
+                  ; unique contributors{' '}
+                  <YearOverYearValue
+                    current={yearOverYearComparison.current.contributors}
+                    previous={yearOverYearComparison.previous.contributors}
+                  />
+                  .
+                </p>
+              ) : null}
+            </div>
+          </div>
+          <ActivityChart category={category} rows={eipDiffsPerMonth} />
+          <p id='trend-footnote' role='note' className='mt-3 text-xs leading-5 text-slate-600'>
+            <sup aria-hidden='true'>*</sup> Complete months only, so a partial current month never
+            looks like a false decline. Contributors are distinct Git authors within each month.
+            {category === 'erc'
+              ? ' ERC history before the October 2023 repository split is sourced from the EIPs repository.'
+              : null}
+          </p>
+        </section>
 
-export const CategoryPage = ({
-  category,
-  eipDiffs,
-  eipDiffsPerMonth,
-  lastCallEIPs,
-}: CategoryProps) => {
-  return (
-    <Layout>
-      <div className='w-full mx-auto max-w-[1216px] px-4 sm:px-2'>
-        <div className='mb-4'>
-          <h1 className='text-xl font-bold text-gray-900 mb-2'>EIP Commits by Category</h1>
-          <EIPDiffsPerMonthChart
-            category={category}
-            eipDiffs={eipDiffs}
-            eipDiffsPerMonth={eipDiffsPerMonth}
-            lastCallEIPs={lastCallEIPs}
-          />
-        </div>
-        <div className='mb-4'>
-          <EIPsInLastCallTable
-            category={category}
-            eipDiffs={eipDiffs}
-            eipDiffsPerMonth={eipDiffsPerMonth}
-            lastCallEIPs={lastCallEIPs}
-          />
-        </div>
-        <div>
-          <LatestEIPTable
-            category={category}
-            eipDiffs={eipDiffs}
-            eipDiffsPerMonth={eipDiffsPerMonth}
-            lastCallEIPs={lastCallEIPs}
-          />
-        </div>
+        <LastCallList eips={lastCallEIPs} generatedAt={generatedAt} />
+        <ActivityFeed eipDiffs={eipDiffs} generatedAt={generatedAt} />
+
+        <p className='mt-6 text-center text-xs text-slate-600'>
+          Snapshot generated {new Date(generatedAt).toLocaleString('en-US', { timeZone: 'UTC' })}{' '}
+          UTC
+        </p>
       </div>
     </Layout>
   );
-};
+}
