@@ -16,22 +16,24 @@ ethereum/EIPs + ethereum/ERCs
               ├─ clones both repositories into temporary runner storage
               ├─ parses current proposal front matter
               ├─ aggregates Git history by month and category
-              └─ writes frontend/data/eips.json
+              └─ commits frontend/data/eips.json
               │
               ▼
-       React + Vite static-site generation
+       Railway Docker deployment
               │
+              ├─ regenerates and validates the current snapshot
+              ├─ prerenders the React + Vite application
+              └─ serves the static build with Caddy
               ▼
-             GitHub Pages
+          https://www.eips.wtf
 ```
 
-The generated snapshot is checked into the repository as a development/build
-fallback. GitHub Actions generates a fresh snapshot and deploys the pre-rendered site
-once a day, on every push to `main`, or when the workflow is run manually. Generated
-data is published in the Pages artifact, and the Sunday run also updates the
-checked-in fallback snapshot. Every route is static HTML that React hydrates for
-search and chart interaction. Visitors never wait on an API, and there are no runtime
-credentials or database connections.
+The generated snapshot is checked into the repository as a development fallback. A
+daily GitHub Actions job refreshes that snapshot, and its commit triggers Railway's
+GitHub autodeploy. Every Railway image build also regenerates and validates the data,
+prerenders each route to static HTML, and packages the result in a small Caddy image.
+React hydrates the deployed pages for search and chart interaction. Visitors never
+wait on an API, and there are no runtime credentials or database connections.
 
 ## Local development
 
@@ -66,7 +68,8 @@ npm run build
 
 `npm run build` writes the deployable site to `frontend/dist/`. The build creates a
 small Vite client bundle, temporarily renders the React application under Node.js,
-and removes that temporary renderer after producing the static pages.
+and removes that temporary renderer after producing the static pages. The production
+Docker image serves this directory with Caddy.
 
 ## Data generation
 
@@ -86,14 +89,37 @@ is excluded so it cannot appear as proposal work.
 
 ## Deployment
 
-[`pages.yml`](.github/workflows/pages.yml) installs the locked dependencies, validates
-the data generator, creates a current snapshot, runs the frontend checks, and deploys
-`frontend/dist/` to GitHub Pages. The daily schedule runs shortly after 06:17 UTC;
-pushes to `main` and manual workflow dispatches also deploy immediately. Sunday's run
-commits the generated snapshot so GitHub does not disable the schedule after 60 days
-of repository inactivity.
+The root [`Dockerfile`](Dockerfile) is the production definition. It tests and runs
+the Python generator, installs the locked frontend dependencies, runs lint and
+typechecking, prerenders the site, and copies only `frontend/dist/` into the final
+Caddy image. [`railway.json`](railway.json) selects the Dockerfile builder and adds a
+health check. No Railway variables, database, volume, or custom start command are
+required.
 
-In the repository's **Settings > Pages**, choose **GitHub Actions** as the source and
-set the custom domain to `www.eips.wtf`. Point the Cloudflare `www` CNAME to
-`rencryptofish.github.io`; keep the apex redirect to `https://www.eips.wtf`. GitHub
-Pages provisions the HTTPS certificate after the DNS change is visible.
+To deploy:
+
+1. Create a Railway project with **Deploy from GitHub repo** and select this
+   repository.
+2. Keep the service root directory set to `/`; Railway automatically detects the
+   root `Dockerfile` and `railway.json`.
+3. In the service's **Settings > Networking**, generate a Railway domain and confirm
+   the deployment is healthy.
+4. Add `www.eips.wtf` as a custom domain, then replace the Cloudflare `www` record
+   with the CNAME target Railway provides. Keep the apex redirect to
+   `https://www.eips.wtf`.
+5. Once the Railway domain is serving the new site, disable the old GitHub Pages
+   deployment.
+
+Railway autodeploys every push to `main`. The
+[`refresh-data.yml`](.github/workflows/refresh-data.yml) workflow runs daily shortly
+after 06:17 UTC, commits a fresh fallback snapshot, and thereby triggers a current
+Railway deployment. It can also be run manually from the repository's Actions tab.
+
+To exercise the same production image locally:
+
+```bash
+docker build -t eips-wtf .
+docker run --rm -p 3000:3000 -e PORT=3000 eips-wtf
+```
+
+Then open <http://localhost:3000>.

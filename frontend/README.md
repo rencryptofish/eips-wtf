@@ -3,8 +3,8 @@
 The frontend is a React 19 application built with Vite. Vite produces a client bundle
 and a temporary SSR bundle; `scripts/prerender.mjs` uses the latter to render every
 category route to static HTML, embeds only that route's data for hydration, and then
-removes the temporary bundle. GitHub Pages serves the generated static files; React is
-never rendered on the server per request.
+removes the temporary bundle. The Railway production image serves the generated files
+with Caddy; React is never rendered on the server per request.
 
 ```bash
 npm ci
