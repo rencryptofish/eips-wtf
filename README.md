@@ -11,29 +11,28 @@ The site has no database and no request-time data API:
 ethereum/EIPs + ethereum/ERCs
               │
               ▼
-    Daily GitHub Actions workflow
+       Daily Railway cron service
               │
-              ├─ clones both repositories into temporary runner storage
-              ├─ parses current proposal front matter
-              ├─ aggregates Git history by month and category
-              └─ commits frontend/data/eips.json
+              └─ requests a fresh web-service deployment
               │
               ▼
-       Railway Docker deployment
+       Railway web-service build
               │
-              ├─ regenerates and validates the current snapshot
+              ├─ clones and parses both upstream repositories
+              ├─ aggregates and validates the current snapshot
               ├─ prerenders the React + Vite application
               └─ serves the static build with Caddy
               ▼
           https://www.eips.wtf
 ```
 
-The generated snapshot is checked into the repository as a development fallback. A
-daily GitHub Actions job refreshes that snapshot, and its commit triggers Railway's
-GitHub autodeploy. Every Railway image build also regenerates and validates the data,
-prerenders each route to static HTML, and packages the result in a small Caddy image.
-React hydrates the deployed pages for search and chart interaction. Visitors never
-wait on an API, and there are no runtime credentials or database connections.
+The generated snapshot is checked into the repository as a development fallback.
+Production refreshes stay entirely inside Railway: a short-lived cron service asks
+Railway to rebuild the persistent web service from its configured source once a day.
+Every web image build regenerates and validates the data, prerenders each route to
+static HTML, and packages the result in a small Caddy image. React hydrates the
+deployed pages for search and chart interaction. Visitors never wait on an API, and
+there are no runtime credentials or database connections.
 
 ## Local development
 
@@ -93,8 +92,8 @@ The root [`Dockerfile`](Dockerfile) is the production definition. It tests and r
 the Python generator, installs the locked frontend dependencies, runs lint and
 typechecking, prerenders the site, and copies only `frontend/dist/` into the final
 Caddy image. [`railway.json`](railway.json) selects the Dockerfile builder and adds a
-health check. No Railway variables, database, volume, or custom start command are
-required.
+health check. The web service needs no Railway variables, database, volume, or custom
+start command.
 
 To deploy:
 
@@ -110,10 +109,25 @@ To deploy:
 5. Once the Railway domain is serving the new site, disable the old GitHub Pages
    deployment.
 
-Railway autodeploys every push to `main`. The
-[`refresh-data.yml`](.github/workflows/refresh-data.yml) workflow runs daily shortly
-after 06:17 UTC, commits a fresh fallback snapshot, and thereby triggers a current
-Railway deployment. It can also be run manually from the repository's Actions tab.
+Railway autodeploys the web service on every push to `main`. A second service handles
+scheduled data refreshes without GitHub Actions:
+
+1. In the same Railway project, add another service from this repository and name it
+   `data-refresh`.
+2. Leave its root directory at `/`, then set its **Config File Path** to
+   `/railway.cron.json`. This selects [`Dockerfile.cron`](Dockerfile.cron) instead of
+   the web image.
+3. In **Project Settings > Tokens**, create a project token for the production
+   environment. Add it to the cron service as the sealed `RAILWAY_TOKEN` variable.
+4. Add `RAILWAY_WEB_SERVICE` to the cron service with the exact name or ID of the
+   persistent web service.
+5. Deploy the staged Railway changes. The config schedules the cron service for
+   `17 6 * * *`, or shortly after 06:17 UTC every day.
+
+The cron image runs Railway's official CLI, requests a `--from-source` deployment of
+the web service, and exits. The resulting web build fetches current upstream data and
+only replaces production after its health check passes. The cron service does not
+need a public domain, database, or volume.
 
 To exercise the same production image locally:
 
