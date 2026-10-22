@@ -8,67 +8,70 @@ Proposal activity, Last Call deadlines, and repository changes.
 The site has no database and no request-time data API:
 
 ```text
-ethereum/EIPs + ethereum/ERCs
+Daily Cloudflare Cron Trigger (06:17 UTC)
               │
               ▼
-       Daily Railway cron service
+       eips-wtf-refresh Worker
               │
-              └─ requests a fresh web-service deployment
+              └─ POSTs to a secret Workers Builds deploy hook
               │
               ▼
-       Railway web-service build
+       Cloudflare Workers Builds
               │
-              ├─ clones and parses both upstream repositories
+              ├─ clones ethereum/EIPs and ethereum/ERCs
               ├─ aggregates and validates the current snapshot
-              ├─ prerenders the React + Vite application
-              └─ serves the static build with Caddy
+              ├─ checks and prerenders the React + Vite application
+              └─ publishes frontend/dist to Workers Static Assets
               ▼
           https://www.eips.wtf
 ```
 
-The generated snapshot is checked into the repository as a development fallback.
-Production refreshes stay entirely inside Railway: a short-lived cron service asks
-Railway to rebuild the persistent web service from its configured source once a day.
-Every web image build regenerates and validates the data, prerenders each route to
-static HTML, and packages the result in a small Caddy image. React hydrates the
-deployed pages for search and chart interaction. Visitors never wait on an API, and
-there are no runtime credentials or database connections.
+Cloudflare also rebuilds on pushes to `main`. The generated snapshot is checked in
+as a development fallback; every production build regenerates it from upstream.
+React hydrates the deployed pages for search and chart interaction. Visitors receive
+static files without invoking a Worker script. A separate Worker only runs once a
+day to request a rebuild; it has no public HTTP endpoint.
 
 ## Local development
 
-Requirements: Git, Python 3.10+, Node.js 22+, and npm.
+Requirements: Git, Python 3.13, Node.js 22+, and npm. Version files at the repository
+root select Python and Node.js for Cloudflare's build image.
 
 ```bash
-python3 -m pip install -r scripts/requirements.txt
-python3 scripts/generate_data.py
+python3 -m venv .venv
+.venv/bin/python -m pip install -r scripts/requirements.txt
+.venv/bin/python scripts/generate_data.py
 
-cd frontend
-npm ci
-npm run dev
-```
-
-Open <http://localhost:5173>. No `.env` values are required.
-
-After installing the frontend dependencies, you can also start development mode
-from the repository root:
-
-```bash
+npm --prefix frontend ci
 make dev
 ```
 
-Useful checks:
+Open <http://localhost:5173>. No `.env` values are required. Data generation is
+optional when working from the checked-in snapshot.
+
+Useful frontend checks:
 
 ```bash
-cd frontend
-npm run lint
-npm run typecheck
+npm --prefix frontend run format:check
+npm --prefix frontend run check
+```
+
+To run the complete production pipeline, including fresh upstream data:
+
+```bash
+npm ci
 npm run build
 ```
 
-`npm run build` writes the deployable site to `frontend/dist/`. The build creates a
-small Vite client bundle, temporarily renders the React application under Node.js,
-and removes that temporary renderer after producing the static pages. The production
-Docker image serves this directory with Caddy.
+The build script creates a Python virtual environment, installs the locked frontend
+dependencies, tests the generator and refresh Worker, regenerates the snapshot, runs
+lint and typechecking, and prerenders the site into `frontend/dist/`.
+
+To serve that build using Cloudflare's local runtime:
+
+```bash
+npm run preview
+```
 
 ## Data generation
 
@@ -86,54 +89,70 @@ with complete months would imply a false decline. ERC activity before the Octobe
 repository split is reconstructed from the EIPs history; the one-time migration import
 is excluded so it cannot appear as proposal work.
 
-## Deployment
+## Cloudflare deployment
 
-The root [`Dockerfile`](Dockerfile) is the production definition. It tests and runs
-the Python generator, installs the locked frontend dependencies, runs lint and
-typechecking, prerenders the site, and copies only `frontend/dist/` into the final
-Caddy image. [`railway.json`](railway.json) selects the Dockerfile builder and adds a
-health check. The web service needs no Railway variables, database, volume, or custom
-start command.
+[`wrangler.jsonc`](wrangler.jsonc) deploys the `eips-wtf` Worker as static assets,
+with directory URLs and a real 404 page. [`frontend/public/_headers`](frontend/public/_headers)
+preserves security headers, gives hashed assets a year-long immutable cache, and
+requires browsers to revalidate HTML after a deployment.
 
-To deploy:
+Connect `rencryptofish/eips-wtf` to the Worker under **Settings > Build**, with:
 
-1. Create a Railway project with **Deploy from GitHub repo** and select this
-   repository.
-2. Keep the service root directory set to `/`; Railway automatically detects the
-   root `Dockerfile` and `railway.json`.
-3. In the service's **Settings > Networking**, generate a Railway domain and confirm
-   the deployment is healthy.
-4. Add `www.eips.wtf` as a custom domain, then replace the Cloudflare `www` record
-   with the CNAME target Railway provides. Keep the apex redirect to
-   `https://www.eips.wtf`.
-5. Once the Railway domain is serving the new site, disable the old GitHub Pages
-   deployment.
+| Setting           | Value                  |
+| ----------------- | ---------------------- |
+| Production branch | `main`                 |
+| Root directory    | `/`                    |
+| Build command     | `npm run build`        |
+| Deploy command    | `npm run deploy`       |
+| Preview command   | `npx wrangler preview` |
 
-Railway autodeploys the web service on every push to `main`. A second service handles
-scheduled data refreshes without GitHub Actions:
+Cloudflare installs the root npm dependencies automatically. The build script
+installs the frontend dependencies. No build secrets are needed by the site.
 
-1. In the same Railway project, add another service from this repository and name it
-   `data-refresh`.
-2. Leave its root directory at `/`, then set its **Config File Path** to
-   `/railway.cron.json`. This selects [`Dockerfile.cron`](Dockerfile.cron) instead of
-   the web image.
-3. In **Project Settings > Tokens**, create a project token for the production
-   environment. Add it to the cron service as the sealed `RAILWAY_TOKEN` variable.
-4. Add `RAILWAY_WEB_SERVICE` to the cron service with the exact name or ID of the
-   persistent web service.
-5. Deploy the staged Railway changes. The config schedules the cron service for
-   `17 6 * * *`, or shortly after 06:17 UTC every day.
-
-The cron image runs Railway's official CLI, requests a `--from-source` deployment of
-the web service, and exits. The resulting web build fetches current upstream data and
-only replaces production after its health check passes. The cron service does not
-need a public domain, database, or volume.
-
-To exercise the same production image locally:
+For a manual deployment using an authenticated Cloudflare account:
 
 ```bash
-docker build -t eips-wtf .
-docker run --rm -p 3000:3000 -e PORT=3000 eips-wtf
+npm ci
+npm run build
+npm run deploy
 ```
 
-Then open <http://localhost:3000>.
+The `workers.dev` hostname allows testing before adding `www.eips.wtf` as a custom
+domain. Keep the apex redirect to `https://www.eips.wtf`. After verifying the custom
+domain, stop the old Railway web deployment and disable its daily cron service to
+end hosting charges there.
+
+## Daily refresh
+
+1. In the `eips-wtf` Worker's **Settings > Build > Deploy Hooks**, create a hook
+   named `daily-refresh` for `main`.
+2. Save the hook URL as a secret on the scheduler Worker:
+
+   ```bash
+   npx wrangler secret put DEPLOY_HOOK_URL --config deploy/refresh/wrangler.jsonc
+   ```
+
+3. Deploy the scheduler:
+
+   ```bash
+   npm run deploy:refresh
+   ```
+
+[`deploy/refresh/wrangler.jsonc`](deploy/refresh/wrangler.jsonc) schedules
+`17 6 * * *` (06:17 UTC daily). The scheduler requests a rebuild and exits. A failed
+build leaves the previous site deployment live. Keep the deploy hook URL secret:
+anyone with it can trigger a build. It must never be checked in or placed in the
+frontend bundle.
+
+Run its failure-handling checks with `npm run test:refresh`.
+
+## Cost
+
+Use the **Workers Free** plan. Static asset requests are free and unlimited, and the
+daily scheduler uses one invocation per day. Workers Builds includes 3,000 minutes
+per month on Free; each build must complete within 20 minutes. This setup uses no
+paid database, storage product, container, or Workers subscription. Domain renewal
+is separate.
+
+- [Static asset pricing](https://developers.cloudflare.com/workers/static-assets/billing-and-limitations/)
+- [Build limits](https://developers.cloudflare.com/workers/ci-cd/builds/limits-and-pricing/)

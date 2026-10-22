@@ -1,7 +1,0 @@
-# syntax=docker/dockerfile:1
-
-FROM ghcr.io/railwayapp/cli:5.27.2
-
-COPY --chmod=755 deploy/cron/redeploy-web.sh /usr/local/bin/redeploy-web
-
-CMD ["/usr/local/bin/redeploy-web"]

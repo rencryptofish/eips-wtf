@@ -1,0 +1,18 @@
+{
+  "name": "eips-wtf-deploy",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "sh scripts/build-cloudflare.sh",
+    "deploy": "wrangler deploy",
+    "deploy:refresh": "wrangler deploy --config deploy/refresh/wrangler.jsonc",
+    "preview": "wrangler dev",
+    "test:refresh": "node --test deploy/refresh/worker.test.mjs"
+  },
+  "devDependencies": {
+    "wrangler": "4.151.3"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "eips-wtf",
+  "compatibility_date": "2026-10-22",
+  "workers_dev": true,
+  "preview_urls": false,
+  "routes": [
+    {
+      "pattern": "www.eips.wtf",
+      "custom_domain": true
+    }
+  ],
+  "assets": {
+    "directory": "./frontend/dist",
+    "html_handling": "auto-trailing-slash",
+    "not_found_handling": "404-page",
+  },
+}
