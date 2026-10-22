@@ -96,7 +96,9 @@ with directory URLs and a real 404 page. [`frontend/public/_headers`](frontend/p
 preserves security headers, gives hashed assets a year-long immutable cache, and
 requires browsers to revalidate HTML after a deployment.
 
-Connect `rencryptofish/eips-wtf` to the Worker under **Settings > Build**, with:
+The Cloudflare Workers and Pages GitHub app must include `rencryptofish/eips-wtf`
+in its selected repositories to receive push events and run builds. Connect that
+repository to the Worker under **Settings > Build**, with:
 
 | Setting           | Value                  |
 | ----------------- | ---------------------- |
@@ -117,10 +119,9 @@ npm run build
 npm run deploy
 ```
 
-The `workers.dev` hostname allows testing before adding `www.eips.wtf` as a custom
-domain. Keep the apex redirect to `https://www.eips.wtf`. After verifying the custom
-domain, stop the old Railway web deployment and disable its daily cron service to
-end hosting charges there.
+The `www.eips.wtf` custom domain is tracked in `wrangler.jsonc`. The `workers.dev`
+hostname remains available for verification. The apex redirects to
+`https://www.eips.wtf` through the existing Cloudflare rule.
 
 ## Daily refresh
 
